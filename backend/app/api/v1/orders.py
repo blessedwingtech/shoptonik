@@ -7,7 +7,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 
 from ...dependencies import get_db, get_current_user
-from ...models import Order, OrderItem, Shop, User, Product
+from app.models.order import Order, OrderItem
+from app.models.shop import Shop
+from app.models.user import User
+from app.models.product import Product
 from ...schemas.order import OrderResponse, OrderUpdate, OrderStats
 from ...core.security import require_shop_owner
 
