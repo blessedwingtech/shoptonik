@@ -5,7 +5,13 @@ from sqlalchemy.orm import Session
 import uuid
 
 from ...dependencies import get_current_user_or_none, get_current_user_or_session, get_db, get_current_user_optional
-from ...models import Cart, CartItem, Product, Shop, User
+ 
+
+from app.models.cart import Cart, CartItem
+from app.models.shop import Shop
+from app.models.user import User
+from app.models.product import Product
+
 from ...schemas.cart import CartResponse, CartItemCreate, CartItemResponse
 
 router = APIRouter(prefix="/cart", tags=["cart"])

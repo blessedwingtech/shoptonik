@@ -10,8 +10,14 @@ import uuid
 from datetime import datetime
 import stripe
 
-from ...dependencies import get_current_user_or_none, get_db, get_current_user
-from ...models import Order, OrderItem, Cart, CartItem, Shop, User, Product
+from ...dependencies import get_current_user_or_none, get_db, get_current_user 
+
+from app.models.order import Order, OrderItem
+from app.models.shop import Shop
+from app.models.user import User
+from app.models.product import Product
+from app.models.cart import Cart, CartItem
+
 from ...models.transaction import Transaction, PaymentMethod, PaymentStatus, TransactionStatus, PaymentProvider
 from ...services.payment_service import PaymentService
 import logging

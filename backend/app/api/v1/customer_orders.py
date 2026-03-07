@@ -9,9 +9,12 @@ import uuid
 # 4. Générer un numéro de commande unique
 from datetime import datetime, timezone
 
-from ...dependencies import get_current_user, get_db, get_current_user_optional
-from ...models import Order, OrderItem, Shop, Product, User
-from ...schemas.order import OrderCreate, OrderResponse
+from ...dependencies import get_current_user, get_db, get_current_user_optional 
+
+from app.models.order import Order, OrderItem
+from app.models.shop import Shop
+from app.models.user import User
+from app.models.product import Product 
 
 router = APIRouter(prefix="/orders", tags=["customer-orders"])
 
