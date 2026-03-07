@@ -31,6 +31,6 @@ backend/uploads/
 # backups
 *_.ts
 *__.tsx
-*__.py
+ 
 *_.py
 *_.tsx
