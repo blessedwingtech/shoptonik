@@ -1,0 +1,564 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
+import { api } from '@/app/lib/api'
+import { 
+  Shop, 
+  Stats, 
+  SocialLinks, 
+  ContactInfo, 
+  PracticalInfo,
+  CommitmentCard 
+} from '@/app/types/shop'
+
+export default function AboutPage() {
+  const params = useParams()
+  const slug = params.slug as string
+  
+  const [shop, setShop] = useState<Shop | null>(null)
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [activeImage, setActiveImage] = useState<string | null>(null)
+
+  useEffect(() => {
+    loadShopInfo()
+  }, [slug])
+
+  const loadShopInfo = async () => {
+    try {
+      const response = await api.getPublicShop(slug)
+      if (response.data) {
+        setShop(response.data)
+        
+        const productsResponse = await api.getPublicShopProducts(slug)
+        if (productsResponse.data) {
+          const products = productsResponse.data
+          
+          const activeProducts = products.filter(p => p.is_active)
+          const totalPrice = activeProducts.reduce((sum, p) => sum + (p.price / 100), 0)
+          
+          const categories = activeProducts.reduce((acc, product) => {
+            if (product.category) {
+              acc[product.category] = (acc[product.category] || 0) + 1
+            }
+            return acc
+          }, {} as Record<string, number>)
+          
+          setStats({
+            totalProducts: activeProducts.length,
+            totalCategories: Object.keys(categories).length,
+            averagePrice: activeProducts.length > 0 ? totalPrice / activeProducts.length : 0,
+            inStock: activeProducts.filter(p => p.stock > 0).length,
+            digitalProducts: products.filter(p => p.is_digital).length,
+            featuredProducts: products.filter(p => p.is_featured).length,
+            categories: Object.entries(categories)
+              .sort(([,a], [,b]) => b - a)
+              .slice(0, 5)
+          })
+        }
+      }
+    } catch (err) {
+      console.error('Erreur chargement boutique:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center py-20">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="h-8 w-8 bg-blue-600 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <p className="mt-6 text-gray-600 font-medium">Chargement de la boutique...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!shop) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-12 text-center border border-gray-100">
+            <div className="text-7xl mb-6 animate-bounce">🏪</div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              Boutique non trouvée
+            </h1>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Cette boutique n'existe pas ou a été supprimée.
+            </p>
+            <Link
+              href="/shop/all"
+              className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <span>Explorer les boutiques</span>
+              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const hasImages = shop.about_image1_url || shop.about_image2_url
+  const hasAboutContent = shop.about_story || shop.about_mission || shop.about_values
+  const hasContact = shop.email || shop.phone || shop.address || shop.website
+  const hasSocial = shop.instagram || shop.facebook || shop.twitter
+  const hasPractical = shop.business_hours || shop.shipping_info || shop.return_policy || shop.payment_methods
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Navigation améliorée */}
+        <nav className="mb-8 flex items-center space-x-2 text-sm">
+          <Link 
+            href={`/shop/${slug}`}
+            className="text-gray-500 hover:text-gray-700 transition-colors flex items-center"
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            Accueil
+          </Link>
+          <span className="text-gray-300">/</span>
+          <span className="text-gray-900 font-medium bg-white px-3 py-1 rounded-full shadow-sm">
+            À propos
+          </span>
+        </nav>
+
+        {/* Hero Section améliorée */}
+        <div className="relative mb-12 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
+          <div className="absolute inset-0 bg-black opacity-10"></div>
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
+          
+          <div className="relative p-12 text-center">
+            {shop.logo_url && (
+              <div className="mb-6 inline-block">
+                <img 
+                  src={shop.logo_url} 
+                  alt={shop.name}
+                  className="h-24 w-24 rounded-2xl shadow-2xl border-4 border-white/50 object-cover"
+                />
+              </div>
+            )}
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-tight">
+              {shop.name}
+            </h1>
+            <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+              {shop.description || 'Bienvenue dans notre univers'}
+            </p>
+            {shop.category && (
+              <div className="mt-6">
+                <span className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full text-sm font-medium">
+                  <span className="mr-2">🏷️</span>
+                  {shop.category}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Cards si disponibles */}
+        {stats && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            {[
+              { label: 'Produits', value: stats.totalProducts, icon: '📦', color: 'blue' },
+              { label: 'Catégories', value: stats.totalCategories, icon: '🏷️', color: 'green' },
+              { label: 'En vedette', value: stats.featuredProducts, icon: '⭐', color: 'purple' },
+              { label: 'Prix moyen', value: `${stats.averagePrice.toFixed(2)}€`, icon: '💰', color: 'orange' }
+            ].map((stat, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-200 hover:shadow-xl"
+              >
+                <div className={`text-3xl mb-2`}>{stat.icon}</div>
+                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                <div className="text-sm text-gray-500">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Contenu principal - Colonne de gauche */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Galerie d'images améliorée */}
+            {hasImages && (
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="p-8 border-b border-gray-100">
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                    <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-2xl p-3 rounded-xl mr-4 shadow-lg">
+                      📸
+                    </span>
+                    Notre univers en images
+                  </h2>
+                </div>
+                
+                <div className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {shop.about_image1_url && (
+                      <div className="group cursor-pointer" onClick={() => setActiveImage(shop.about_image1_url)}>
+                        <div className="relative h-72 rounded-xl overflow-hidden shadow-lg">
+                          <img
+                            src={shop.about_image1_url}
+                            alt="Présentation boutique"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="absolute bottom-4 left-4 text-white transform translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <p className="font-medium">Cliquez pour agrandir</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {shop.about_image2_url && (
+                      <div className="group cursor-pointer" onClick={() => setActiveImage(shop.about_image2_url)}>
+                        <div className="relative h-72 rounded-xl overflow-hidden shadow-lg">
+                          <img
+                            src={shop.about_image2_url}
+                            alt="Ambiance boutique"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <div className="absolute bottom-4 left-4 text-white transform translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <p className="font-medium">Cliquez pour agrandir</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sections À propos avec meilleure hiérarchie */}
+            {hasAboutContent && (
+              <div className="space-y-6">
+                {shop.about_story && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow">
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center text-3xl">
+                          📖
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Notre histoire</h2>
+                        <div className="prose prose-lg max-w-none">
+                          <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                            {shop.about_story}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {shop.about_mission && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow">
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center text-3xl">
+                          🎯
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Notre mission</h2>
+                        <div className="prose prose-lg max-w-none">
+                          <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                            {shop.about_mission}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {shop.about_values && (
+                  <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow">
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center text-3xl">
+                          💎
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Nos valeurs</h2>
+                        <div className="prose prose-lg max-w-none">
+                          <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                            {shop.about_values}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Engagements */}
+            {shop.about_commitments && (
+              <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl shadow-xl p-8 border border-red-100">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <span className="bg-red-500 text-white p-3 rounded-xl mr-4 text-2xl shadow-lg">
+                    🤝
+                  </span>
+                  Nos engagements
+                </h2>
+                <div className="prose prose-lg max-w-none">
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                    {shop.about_commitments}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar - Colonne de droite */}
+          <div className="space-y-6">
+            
+            {/* Contact Card */}
+            {hasContact && (
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden sticky top-6">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
+                  <h3 className="text-xl font-bold text-white flex items-center">
+                    <span className="text-2xl mr-3">📞</span>
+                    Contact
+                  </h3>
+                </div>
+                
+                <div className="p-6 space-y-6">
+                  {shop.email && (
+                    <div className="group">
+                      <p className="text-sm text-gray-500 mb-1">Email</p>
+                      <a 
+                        href={`mailto:${shop.email}`}
+                        className="text-blue-600 font-medium hover:text-blue-700 inline-flex items-center group-hover:underline"
+                      >
+                        {shop.email}
+                        <svg className="w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  )}
+                  
+                  {shop.phone && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Téléphone</p>
+                      <a 
+                        href={`tel:${shop.phone}`}
+                        className="text-gray-900 font-medium hover:text-blue-600 transition-colors"
+                      >
+                        {shop.phone}
+                      </a>
+                    </div>
+                  )}
+                  
+                  {(shop.address || shop.city || shop.country) && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Adresse</p>
+                      <address className="not-italic text-gray-900 font-medium leading-relaxed">
+                        {shop.address && <div>{shop.address}</div>}
+                        <div>
+                          {shop.city}{shop.postal_code && `, ${shop.postal_code}`}
+                          {shop.country && <div>{shop.country}</div>}
+                        </div>
+                      </address>
+                    </div>
+                  )}
+                  
+                  {shop.website && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Site web</p>
+                      <a 
+                        href={shop.website.startsWith('http') ? shop.website : `https://${shop.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 font-medium hover:text-blue-700 inline-flex items-center"
+                      >
+                        {shop.website.replace(/^https?:\/\//, '')}
+                        <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Réseaux sociaux */}
+                {hasSocial && (
+                  <div className="border-t border-gray-100 p-6">
+                    <p className="text-sm font-medium text-gray-700 mb-4">Suivez-nous</p>
+                    <div className="flex flex-wrap gap-4">
+                      {shop.instagram && (
+                        <a 
+                          href={`https://instagram.com/${shop.instagram.replace('@', '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform"
+                          title="Instagram"
+                        >
+                          📸
+                        </a>
+                      )}
+                      {shop.facebook && (
+                        <a 
+                          href={shop.facebook.includes('facebook.com') ? shop.facebook : `https://facebook.com/${shop.facebook}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform"
+                          title="Facebook"
+                        >
+                          👍
+                        </a>
+                      )}
+                      {shop.twitter && (
+                        <a 
+                          href={`https://twitter.com/${shop.twitter.replace('@', '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white hover:scale-110 transition-transform"
+                          title="Twitter/X"
+                        >
+                          🐦
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Informations pratiques */}
+            {hasPractical && (
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-gradient-to-r from-green-600 to-green-700 p-6">
+                  <h3 className="text-xl font-bold text-white flex items-center">
+                    <span className="text-2xl mr-3">⚙️</span>
+                    Infos pratiques
+                  </h3>
+                </div>
+                
+                <div className="p-6 space-y-6">
+                  {shop.business_hours && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Horaires</p>
+                      <p className="text-gray-900 font-medium whitespace-pre-line">
+                        {shop.business_hours}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {shop.shipping_info && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Livraison</p>
+                      <p className="text-gray-700 whitespace-pre-line">{shop.shipping_info}</p>
+                    </div>
+                  )}
+                  
+                  {shop.return_policy && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Retours</p>
+                      <p className="text-gray-700 whitespace-pre-line">{shop.return_policy}</p>
+                    </div>
+                  )}
+                  
+                  {shop.payment_methods && (
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">Paiement</p>
+                      <p className="text-gray-700 whitespace-pre-line">{shop.payment_methods}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* CTA amélioré */}
+            <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl shadow-xl p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-10 rounded-full -mr-20 -mt-20"></div>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-white opacity-10 rounded-full -ml-20 -mb-20"></div>
+              
+              <div className="relative">
+                <div className="text-5xl mb-4">✨</div>
+                <h3 className="text-2xl font-bold mb-3">Prêt à commander ?</h3>
+                <p className="text-white/90 mb-8 leading-relaxed">
+                  Découvrez notre sélection de produits et vivez une expérience unique.
+                </p>
+                
+                <div className="space-y-3">
+                  <Link
+                    href={`/shop/${slug}/products`}
+                    className="block w-full bg-white text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-2 border-white text-center py-4 rounded-xl font-bold transform hover:scale-105 transition-all duration-200"
+                  >
+                    Voir tous les produits
+                  </Link>
+                  <Link
+                    href={`/shop/${slug}`}
+                    className="block w-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 text-center py-4 rounded-xl font-bold transform hover:scale-105 transition-all duration-200 border border-white/30"
+                  >
+                    Retour à l'accueil
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-12 text-center">
+          <div className="inline-flex items-center px-6 py-3 bg-white rounded-full shadow-md">
+            <span className="text-gray-400 mr-2">✨</span>
+            <p className="text-gray-600">
+              Boutique active depuis {shop.created_at ? new Date(shop.created_at).toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }) : 'récemment'}
+            </p>
+          </div>
+        </footer>
+      </div>
+
+      {/* Modal pour agrandir les images */}
+      {activeImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => setActiveImage(null)}
+        >
+          <div className="relative max-w-5xl w-full h-full flex items-center">
+            <img
+              src={activeImage}
+              alt="Agrandissement"
+              className="w-full h-auto max-h-[90vh] object-contain rounded-2xl"
+            />
+            <button
+              onClick={() => setActiveImage(null)}
+              className="absolute top-4 right-4 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
