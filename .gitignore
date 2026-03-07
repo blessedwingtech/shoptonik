@@ -29,7 +29,8 @@ backend/uploads/
 .idea/
 
 # backups
-*_
-*__
-*_*.py
-*_*.tsx
+*_.ts
+*__.tsx
+*__.py
+*_.py
+*_.tsx

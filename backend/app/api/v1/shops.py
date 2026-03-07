@@ -13,7 +13,7 @@ from app.schemas.shop import ShopCreate, ShopResponse, ShopUpdate, ShopWithStats
 from app.models.user import User
 from app.models.shop import Shop
 from app.models.product import Product
-from app.services.shop_service import ShopService
+from services.shop_service import ShopService
 
 router = APIRouter(prefix="/shops", tags=["shops"])
 
