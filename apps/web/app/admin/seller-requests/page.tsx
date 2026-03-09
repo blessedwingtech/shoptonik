@@ -35,7 +35,8 @@ export default function AdminSellerRequestsPage() {
     setIsLoading(true)
     setError('')
     try {
-      const response = await api.request('/seller/admin/pending')
+      // const response = await api.request('/seller/admin/pending')
+      const response = await api.getPendingSellerRequests()
       if (response.data) {
         setRequests(response.data)
       } else {
@@ -56,9 +57,10 @@ export default function AdminSellerRequestsPage() {
     setSuccess('')
 
     try {
-      const response = await api.request(`/seller/admin/approve/${userId}`, {
-        method: 'POST'
-      })
+      // const response = await api.request(`/seller/admin/approve/${userId}`, {
+      //   method: 'POST'
+      // })
+      const response = await api.approveSellerRequest(userId)
 
       if (response.data) {
         setSuccess(`✅ Demande de ${userName} approuvée avec succès`)
@@ -81,9 +83,10 @@ export default function AdminSellerRequestsPage() {
     setSuccess('')
 
     try {
-      const response = await api.request(`/seller/admin/reject/${userId}`, {
-        method: 'POST'
-      })
+      // const response = await api.request(`/seller/admin/reject/${userId}`, {
+      //   method: 'POST'
+      // })
+      const response = await api.rejectSellerRequest(userId)
 
       if (response.data) {
         setSuccess(`✅ Demande de ${userName} rejetée`)
