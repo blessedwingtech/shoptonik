@@ -51,6 +51,12 @@ export interface SellerRequest {
   phone: string | null
   requested_at: string
 }
+
+// Dans api.ts, après SellerRequest
+export interface SellerRequestStatusResponse {
+  status: 'none' | 'pending' | 'approved' | 'rejected'
+  request?: SellerRequest  // La demande si elle existe
+}
  
 // ===== Types réutilisables =====
 // export interface Shop {
@@ -1058,8 +1064,9 @@ async rejectSellerRequest(userId: string) {
 }
 
 // Dans api.ts, avec les autres méthodes seller
-async getSellerRequestStatus() {
-  return this.request('/seller/request/status', {}, false)
+// Dans api.ts, avec les autres méthodes seller
+async getSellerRequestStatus(): Promise<ApiResponse<SellerRequestStatusResponse>> {
+  return this.request<SellerRequestStatusResponse>('/seller/request/status', {}, false)
 }
 
 async submitSellerRequest(data: {

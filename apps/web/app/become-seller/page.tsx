@@ -13,7 +13,7 @@ export default function BecomeSellerPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [requestStatus, setRequestStatus] = useState<'none' | 'pending' | 'approved'>('none')
+  const [requestStatus, setRequestStatus] = useState<'none' | 'pending' | 'approved' | 'rejected'>('none')
   
   const [formData, setFormData] = useState({
     company_name: '',
