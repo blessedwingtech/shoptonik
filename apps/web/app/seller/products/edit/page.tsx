@@ -101,7 +101,15 @@ export default function EditProductPage() {
       if (response.data) {
         const productData = response.data
         setProduct(productData)
-        
+        console.log('🔍 DEBUG - Produit reçu:', {
+  id: productData.id,
+  name: productData.name,
+  price_brut: productData.price,
+  price_type: typeof productData.price,
+  price_divise: productData.price / 100,
+  compare_price_brut: productData.compare_price,
+  compare_price_type: typeof productData.compare_price,
+})
         setFormData({
           name: productData.name,
           description: productData.description || '',
@@ -181,7 +189,8 @@ export default function EditProductPage() {
       const updateData: ProductUpdateData = {
         name: formData.name?.trim(),
         description: formData.description?.trim() || undefined,
-        price: Math.round(formData.price * 100),
+        //price: Math.round(formData.price * 100),
+        price: Math.round((formData.price ?? 0) * 100),
         compare_price: formData.compare_price ? Math.round(formData.compare_price * 100) : undefined,
         stock: formData.stock || 0,
         images: uploadedImageUrls,
@@ -448,6 +457,7 @@ export default function EditProductPage() {
               maxSizeMB={5}
               shopId={product.shop_id}
               autoUpload={true}
+              existingImages={product.images || []}
             />
           </div>
 
@@ -721,7 +731,7 @@ export default function EditProductPage() {
                   <span>Statut :</span>
                   <span className="font-semibold">{formData.is_active ? 'Actif' : 'Inactif'}</span>
                 </div>
-                {(product?.price !== Math.round(formData.price * 100) || 
+                {(product?.price !== Math.round((formData.price ?? 0) * 100) || 
                   product?.stock !== formData.stock ||
                   product?.is_active !== formData.is_active ||
                   (product?.compare_price || 0) !== (formData.compare_price ? Math.round(formData.compare_price * 100) : 0)) && (

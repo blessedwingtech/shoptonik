@@ -91,18 +91,47 @@ class ShopUpdate(BaseModel):
     @field_validator('accepted_payment_methods')
     @classmethod
     def validate_accepted_payment_methods(cls, v):
-        """Convertit la string JSON en tableau si nécessaire"""
+        """Convertit en liste si nécessaire et s'assure que c'est JSON serializable"""
         if v is None:
             return v
+            
+        # Si c'est déjà une liste, on la garde (mais on vérifie que ce n'est pas un set)
+        if isinstance(v, list):
+            return v
+            
+        # Si c'est un set, on le convertit en liste
+        if isinstance(v, set):
+            return list(v)
+            
+        # Si c'est une string JSON, on la parse
         if isinstance(v, str):
             try:
-                # Si c'est une string JSON, on la parse
-                return json.loads(v)
+                result = json.loads(v)
+                # Si le résultat est un set, le convertir en liste
+                if isinstance(result, set):
+                    return list(result)
+                return result
             except json.JSONDecodeError:
                 # Si c'est une string simple, on la met dans un tableau
                 return [v]
-        # Si c'est déjà un tableau, on le garde
-        return v
+                
+        # Si c'est autre chose, on le met dans une liste
+        return [v]
+    # @field_validator('accepted_payment_methods')
+    # @classmethod
+    # def validate_accepted_payment_methods(cls, v):
+    #     """Convertit la string JSON en tableau si nécessaire"""
+    #     if v is None:
+    #         return v
+    #     if isinstance(v, str):
+    #         try:
+    #             # Si c'est une string JSON, on la parse
+    #             return json.loads(v)
+    #         except json.JSONDecodeError:
+    #             # Si c'est une string simple, on la met dans un tableau
+    #             return [v]
+    #     # Si c'est déjà un tableau, on le garde
+    #     return v
 
     
     @field_validator('primary_color', 'secondary_color')

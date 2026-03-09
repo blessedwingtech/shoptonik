@@ -200,9 +200,18 @@ export default function OrderDetailsPage() {
           <h1 className="text-3xl font-bold text-gray-900">
             Commande #{order.order_number}
           </h1>
-          <p className="mt-2 text-gray-600">
-            Passée le {formatDate(order.created_at)}
-          </p>
+          // Dans MyOrdersPage, remplacez la ligne de date par :
+
+<p className="text-gray-600 text-sm mt-1">
+  Passée le {new Date(order.created_at).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Paris'  // Forcer le fuseau horaire français
+  })}
+</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

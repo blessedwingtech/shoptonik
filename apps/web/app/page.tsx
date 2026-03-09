@@ -502,7 +502,7 @@ export default function HomePage() {
             
             <div className="flex items-center space-x-6">
               <Link 
-                href="/privacy" 
+                href="/legal/confidentialite" 
                 className="text-gray-400 hover:text-white text-sm transition-colors"
               >
                 Politique de confidentialité

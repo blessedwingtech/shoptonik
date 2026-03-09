@@ -181,12 +181,62 @@ async def get_public_shop(
 #     }
 
 
+# @router.get("/shops/{slug}/products")
+# async def get_public_shop_products(
+#     slug: str,
+#     db: Session = Depends(get_db),
+#     skip: int = 0,
+#     limit: int = 100
+# ):
+#     """Get products from a shop (public access)"""
+#     shop = db.query(Shop).filter(
+#         Shop.slug == slug,
+#         Shop.is_active == True
+#     ).first()
+    
+#     if not shop:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Shop not found"
+#         )
+    
+#     products = db.query(Product).filter(
+#         Product.shop_id == shop.id
+#     ).offset(skip).limit(limit).all()
+    
+#     return [
+#         {
+#             "id": product.id,
+#             "name": product.name,
+#             "description": product.description,
+#             "price": product.price,
+#             "stock": product.stock,
+#             "images": product.images if product.images else [],
+#             "category": product.category,
+#             "sku": product.sku,
+#             "shop_id": product.shop_id,
+#             "view_count": product.view_count,
+#             "tags": product.tags,
+#             "created_at": product.created_at.isoformat() if product.created_at else None
+#         }
+#         for product in products
+#     ]
 @router.get("/shops/{slug}/products")
 async def get_public_shop_products(
     slug: str,
     db: Session = Depends(get_db),
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
+    category: Optional[str] = None,
+    featured: Optional[bool] = None,
+    digital: Optional[bool] = None,
+    min_price: Optional[int] = None,
+    max_price: Optional[int] = None,
+    in_stock: Optional[bool] = None,
+    tag: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: Optional[str] = "created_at",
+    sort_order: Optional[str] = "desc"
 ):
     """Get products from a shop (public access)"""
     shop = db.query(Shop).filter(
@@ -200,24 +250,88 @@ async def get_public_shop_products(
             detail="Shop not found"
         )
     
-    products = db.query(Product).filter(
-        Product.shop_id == shop.id
-    ).offset(skip).limit(limit).all()
+    # Construire la requête de base
+    query = db.query(Product).filter(
+        Product.shop_id == shop.id,
+        Product.is_active == True
+    )
     
+    # Appliquer les filtres (comme dans shops.py)
+    if category:
+        query = query.filter(Product.category == category)
+    if featured is not None:
+        query = query.filter(Product.is_featured == featured)
+    if digital is not None:
+        query = query.filter(Product.is_digital == digital)
+    if min_price is not None:
+        query = query.filter(Product.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Product.price <= max_price)
+    if in_stock is not None:
+        if in_stock:
+            query = query.filter(Product.stock > 0)
+        else:
+            query = query.filter(Product.stock <= 0)
+    if tag:
+        query = query.filter(Product.tags.contains([tag]))
+    if search:
+        query = query.filter(
+            Product.name.ilike(f"%{search}%") |
+            Product.description.ilike(f"%{search}%") |
+            Product.category.ilike(f"%{search}%")
+        )
+    
+    # Appliquer le tri
+    if sort_by == "created_at":
+        order_column = Product.created_at
+    elif sort_by == "name":
+        order_column = Product.name
+    elif sort_by == "price":
+        order_column = Product.price
+    elif sort_by == "view_count":
+        order_column = Product.view_count
+    else:
+        order_column = Product.created_at
+    
+    if sort_order == "desc":
+        query = query.order_by(order_column.desc())
+    else:
+        query = query.order_by(order_column.asc())
+    
+    products = query.offset(skip).limit(limit).all()
+    
+    # Retourner TOUS les champs nécessaires
     return [
         {
             "id": product.id,
             "name": product.name,
+            "slug": product.slug,
             "description": product.description,
             "price": product.price,
+            "compare_price": product.compare_price,
             "stock": product.stock,
             "images": product.images if product.images else [],
             "category": product.category,
             "sku": product.sku,
             "shop_id": product.shop_id,
-            "view_count": product.view_count,
+            "is_active": product.is_active,
+            "is_featured": product.is_featured,  # ← IMPORTANT
+            "is_digital": product.is_digital,
+            "digital_url": product.digital_url,
+            "weight_grams": product.weight_grams,
+            "dimensions": product.dimensions,
             "tags": product.tags,
-            "created_at": product.created_at.isoformat() if product.created_at else None
+            "variations": product.variations,
+            "meta_title": product.meta_title,
+            "meta_description": product.meta_description,
+            "view_count": product.view_count,
+            "created_at": product.created_at.isoformat() if product.created_at else None,
+            "updated_at": product.updated_at.isoformat() if product.updated_at else None,
+            "formatted_price": f"{product.price / 100:.2f} €",
+            "formatted_compare_price": f"{product.compare_price / 100:.2f} €" if product.compare_price else None,
+            "has_discount": bool(product.compare_price and product.compare_price > product.price),
+            "discount_percentage": int(((product.compare_price - product.price) / product.compare_price) * 100) if product.compare_price and product.compare_price > product.price else 0,
+            "is_available": product.is_available
         }
         for product in products
     ]

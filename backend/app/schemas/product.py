@@ -220,6 +220,10 @@ class ProductResponse(ProductBase):
     formatted_price: str
     formatted_compare_price: Optional[str]
 
+    price: int = Field(..., description="Prix en centimes")
+    compare_price: Optional[int] = Field(None, description="Prix barré en centimes")
+
+
     model_config = ConfigDict(
         from_attributes=True
     )

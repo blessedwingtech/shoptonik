@@ -354,6 +354,7 @@ export interface PublicProduct {
   formatted_price: string
   formatted_compare_price: string | null
   is_available: boolean
+  is_featured: boolean
   created_at: string
   updated_at: string
   
@@ -738,26 +739,31 @@ class ApiClient {
 async getPublicShop(slug: string) {
   return this.request<Shop>(`/shops/public/shops/${slug}`, {}, false)
 }
+// Dans api.ts, ajoutez :
+async getPublicShopById(shopId: string) {
+  return this.request<Shop>(`/public/shops/id/${shopId}`, {}, false)
+}
+
 
 // NOUVEAU (CORRECT pour les produits d'une boutique)
-async getPublicShopProducts(
-  shopSlug: string,
-  options: any = {}
-): Promise<ApiResponse<s[]>> {
-  const queryParams = new URLSearchParams()
+// async getPublicShopProducts(
+//   shopSlug: string,
+//   options: any = {}
+// ): Promise<ApiResponse<s[]>> {
+//   const queryParams = new URLSearchParams()
   
-  Object.entries(options).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      queryParams.append(key, String(value))
-    }
-  })
+//   Object.entries(options).forEach(([key, value]) => {
+//     if (value !== undefined && value !== null) {
+//       queryParams.append(key, String(value))
+//     }
+//   })
   
-  const queryString = queryParams.toString()
-  const url = `/shops/public/shops/${shopSlug}/products${queryString ? `?${queryString}` : ''}`
+//   const queryString = queryParams.toString()
+//   const url = `/shops/public/shops/${shopSlug}/products${queryString ? `?${queryString}` : ''}`
   
-  console.log("📤 [API] GET Public Shop Products:", url) // Pour debug
-  return this.request<Product[]>(url, {}, false)
-}
+//   console.log("📤 [API] GET Public Shop Products:", url) // Pour debug
+//   return this.request<Product[]>(url, {}, false)
+// }
 
 
   // ===== Dashboard =====

@@ -171,7 +171,7 @@ export default function CartSidebar({ slug, cart }: CartSidebarProps) {
 
       {/* Modal du panier */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
+        <div className="fixed inset-0 bg-white/10 backdrop-blur-md z-50 flex justify-end">
           <div 
             ref={sidebarRef}
             className="bg-white w-full max-w-md h-[100dvh] shadow-2xl flex flex-col animate-slideIn overflow-hidden"

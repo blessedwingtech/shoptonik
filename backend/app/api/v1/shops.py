@@ -547,11 +547,54 @@ async def get_shop_stats(
  
 
 
+# @router.put("/{shop_slug}")
+# async def update_shop(
+#     request: Request,
+#     shop_slug: str,
+#     shop_data: ShopUpdate,  # Utilisez le schéma ShopUpdate que vous avez
+#     current_user: User = Depends(get_current_user),
+#     db: Session = Depends(get_db)
+# ):
+#     """Mettre à jour les informations d'une boutique"""
+#     shop = db.query(Shop).filter(
+#         Shop.slug == shop_slug,
+#         Shop.owner_id == current_user.id
+#     ).first()
+    
+#     if not shop:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Boutique non trouvée"
+#         )
+    
+#     # Mettre à jour les champs
+#     update_data = shop_data.dict(exclude_unset=True)
+#     for field, value in update_data.items():
+#         setattr(shop, field, value)
+    
+#     db.commit()
+#     db.refresh(shop)
+
+#     # AJOUTER L'AUDIT
+#     audit = AuditService(db)
+#     await audit.log_update(
+#         resource_type="shop",
+#         resource_id=shop.id,
+#         old_values={...},  # À définir
+#         new_values=update_data,
+#         user_id=current_user.id,
+#         user_email=current_user.email,
+#         request=request,
+#         shop_id=shop.id
+#     )
+    
+#     return shop
+
 @router.put("/{shop_slug}")
 async def update_shop(
     request: Request,
     shop_slug: str,
-    shop_data: ShopUpdate,  # Utilisez le schéma ShopUpdate que vous avez
+    shop_data: ShopUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -567,6 +610,21 @@ async def update_shop(
             detail="Boutique non trouvée"
         )
     
+    # Option 1: Récupérer les anciennes valeurs AVANT modification
+    old_values = {
+        "name": shop.name,
+        "description": shop.description,
+        "category": shop.category,
+        "currency": shop.currency,
+        "language": shop.language,
+        "timezone": shop.timezone,
+        "primary_color": shop.primary_color,
+        "secondary_color": shop.secondary_color,
+        "is_active": shop.is_active,
+        "accepted_payment_methods": shop.accepted_payment_methods if hasattr(shop, 'accepted_payment_methods') else []
+        # Ajoutez d'autres champs si nécessaire
+    }
+    
     # Mettre à jour les champs
     update_data = shop_data.dict(exclude_unset=True)
     for field, value in update_data.items():
@@ -575,12 +633,12 @@ async def update_shop(
     db.commit()
     db.refresh(shop)
 
-    # AJOUTER L'AUDIT
+    # AJOUTER L'AUDIT avec les vraies anciennes valeurs
     audit = AuditService(db)
     await audit.log_update(
         resource_type="shop",
         resource_id=shop.id,
-        old_values={...},  # À définir
+        old_values=old_values,  # ← Maintenant c'est un vrai dictionnaire
         new_values=update_data,
         user_id=current_user.id,
         user_email=current_user.email,
@@ -589,4 +647,3 @@ async def update_shop(
     )
     
     return shop
-

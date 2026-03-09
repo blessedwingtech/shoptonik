@@ -12,6 +12,19 @@ class AuditService:
     def __init__(self, db: Session):
         self.db = db
     
+    def _make_json_serializable(self, obj: Any) -> Any:
+        """Convertit récursivement les sets en listes pour être JSON serializable"""
+        if obj is None:
+            return None
+        if isinstance(obj, set):
+            return list(obj)
+        if isinstance(obj, dict):
+            return {k: self._make_json_serializable(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple)):
+            return [self._make_json_serializable(item) for item in obj]
+        # Ajoutez d'autres conversions si nécessaire (datetime, Decimal, etc.)
+        return obj
+    
     async def log(
         self,
         action: str,
@@ -40,12 +53,19 @@ class AuditService:
             user_agent = request.headers.get("user-agent")
         
         # Nettoyer les valeurs sensibles (mots de passe, tokens)
-        if new_values and "password" in new_values:
-            new_values = new_values.copy()
-            new_values["password"] = "[REDACTED]"
-        if old_values and "password" in old_values:
-            old_values = old_values.copy()
-            old_values["password"] = "[REDACTED]"
+        if new_values:
+            new_values = new_values.copy() if isinstance(new_values, dict) else new_values
+            if "password" in new_values:
+                new_values["password"] = "[REDACTED]"
+            # 🔥 CONVERTIR LES SETS EN LISTES
+            new_values = self._make_json_serializable(new_values)
+        
+        if old_values:
+            old_values = old_values.copy() if isinstance(old_values, dict) else old_values
+            if "password" in old_values:
+                old_values["password"] = "[REDACTED]"
+            # 🔥 CONVERTIR LES SETS EN LISTES
+            old_values = self._make_json_serializable(old_values)
         
         # Créer l'entrée d'audit
         log_entry = AuditLog(
@@ -67,6 +87,7 @@ class AuditService:
         self.db.commit()
         
         return log_entry
+    
     
     async def log_login(self, user_id: str, user_email: str, success: bool, request: Request = None, error: str = None):
         """Journaliser une tentative de connexion"""

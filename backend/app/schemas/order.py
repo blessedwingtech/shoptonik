@@ -3,6 +3,8 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
 
+from app.schemas.shop import ShopResponse
+
 class OrderStatus(str, Enum):
     PENDING = "pending"
     PROCESSING = "processing"
@@ -77,9 +79,12 @@ class OrderResponse(BaseModel):
     notes: Optional[str]
     created_at: datetime
     updated_at: Optional[datetime]
+
+    shop: Optional[ShopResponse] = Field(None, alias='shop')
     
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 class OrderStats(BaseModel):
     total_orders: int = 0

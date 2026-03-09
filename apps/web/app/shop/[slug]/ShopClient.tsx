@@ -9,7 +9,7 @@ import { useCart } from '@/app/hooks/useCart'
 import Image from 'next/image'
 
 // ProductCard mis à jour avec tous les nouveaux champs
-function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any) {
+function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart, primaryColor, secondaryColor }: any) {
   const [localLoading, setLocalLoading] = useState(false)
   const [lastAddedProductId, setLastAddedProductId] = useState<string | null>(null)
 
@@ -32,12 +32,9 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
 
     try {
       await addToCart(slug, product.id, 1)
-
       console.log('Produit ajouté avec succès')
-
     } catch (err: any) {
       console.error('Erreur lors de l\'ajout au panier:', err)
-
       if (err.message?.includes('Stock') || err.message?.includes('stock') ||    
           err.message?.includes('insuffisant')) {
         alert(`Erreur: ${err.message}`)
@@ -55,13 +52,18 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
     return (priceInCents / 100).toFixed(2) + ' €'
   }
 
+  // Style dynamique pour le bouton
+  const buttonStyle = {
+    background: `linear-gradient(135deg, ${primaryColor || '#3B82F6'} 0%, ${secondaryColor || '#8B5CF6'} 100%)`
+  }
+
   return (
     <div className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-200 ${
       lastAddedProductId === product.id ? 'ring-2 ring-green-500 ring-opacity-50' : ''
     }`}>
       {/* En-tête avec badges */}
       <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-        <Link href="#"/* {`/shop/${slug}/${product.slug}`} */ className="absolute inset-0 z-10">
+        <Link href={`/product/${product.id}`} className="absolute inset-0 z-10">
           {product.images && product.images.length > 0 ? (
             <img
               src={product.images[0]}
@@ -120,7 +122,13 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
         {/* Catégorie et vues */}
         <div className="flex justify-between items-start mb-2">
           <Link href={`/shop/${slug}/products?category=${product.category}`}>
-            <span className="text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
+            <span 
+              className="text-xs font-medium px-2 py-1 rounded transition-colors"
+              style={{ 
+                backgroundColor: `${primaryColor}20`, 
+                color: primaryColor || '#3B82F6' 
+              }}
+            >
               {product.category || 'Général'}
             </span>
           </Link>
@@ -130,8 +138,11 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
         </div>
 
         {/* Nom du produit */}
-        <Link href={`/product/${product.id}`}  /* href={`/shop/${slug}/${product.slug}`} */>
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 h-14 hover:text-blue-600 transition-colors">
+        <Link href={`/product/${product.id}`}>
+          <h3 
+            className="font-semibold text-lg mb-2 line-clamp-2 h-14 hover:underline transition-colors"
+            style={{ color: primaryColor || '#3B82F6' }}
+          >
             {product.name}
           </h3>
         </Link>
@@ -142,23 +153,21 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
         </p>
 
         {/* Tags */}
-        {/* Tags */}
-{product.tags && Array.isArray(product.tags) && product.tags.length > 0 && (
-  <div className="flex flex-wrap gap-1 mb-3">
-    {product.tags.slice(0, 3).map((tag: any, index: number) => (
-      <span
-        key={index}
-        className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded hover:bg-gray-200 transition-colors cursor-default"
-        title={typeof tag === 'string' ? tag : JSON.stringify(tag)}
-      >
-        {typeof tag === 'string' ? tag : 'Tag'}
-      </span>
-    ))}
-    {product.tags.length > 3 && (
-      <span className="text-xs text-gray-400">+{product.tags.length - 3}</span>
-    )}
-  </div>
-)}
+        {product.tags && Array.isArray(product.tags) && product.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {product.tags.slice(0, 3).map((tag: any, index: number) => (
+              <span
+                key={index}
+                className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded hover:bg-gray-200 transition-colors cursor-default"
+              >
+                {typeof tag === 'string' ? tag : 'Tag'}
+              </span>
+            ))}
+            {product.tags.length > 3 && (
+              <span className="text-xs text-gray-400">+{product.tags.length - 3}</span>
+            )}
+          </div>
+        )}
 
         {/* Prix et stock */}
         <div className="flex justify-between items-center mb-4">
@@ -191,9 +200,10 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
             availableStock <= 0
               ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200'
               : localLoading
-                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white'
-                : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-blue-200 hover:shadow-blue-300'     
+                ? 'text-white'
+                : 'text-white hover:opacity-90'
           }`}
+          style={availableStock > 0 ? buttonStyle : {}}
         >
           {localLoading ? (
             <span className="flex items-center justify-center gap-2">
@@ -222,9 +232,9 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
 
         {/* Lien vers la page produit */}
         <Link
-          /* href={`/shop/${slug}/${product.slug}`} */
           href={`/product/${product.id}`} 
-          className="block text-center text-blue-600 hover:text-blue-700 text-sm mt-3"
+          className="block text-center text-sm mt-3 hover:underline"
+          style={{ color: primaryColor || '#3B82F6' }}
         >
           Voir les détails →
         </Link>
@@ -233,9 +243,7 @@ function ProductCard({ product, slug, addToCart, isLoadingAddToCart, cart }: any
   )
 }
 
-export default function ShopPage() {
-  const params = useParams()
-  const slug = params.slug as string
+export default function ShopClient({ slug }: { slug: string }) {
   const [shop, setShop] = useState<any>(null)
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([])
   const [recentProducts, setRecentProducts] = useState<any[]>([])
@@ -324,10 +332,43 @@ export default function ShopPage() {
     )
   }
 
+  const primaryColor = shop.primary_color || '#3B82F6'
+  const secondaryColor = shop.secondary_color || '#8B5CF6'
+
+  // Styles dynamiques
+  const heroStyle = {
+    background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`
+  }
+
+  const buttonStyle = {
+    backgroundColor: primaryColor,
+    '--tw-ring-color': primaryColor
+  } as React.CSSProperties
+
+  const outlineButtonStyle = {
+    color: primaryColor,
+    borderColor: primaryColor
+  }
+
+  const activeTabStyle = {
+    backgroundColor: primaryColor,
+    color: 'white'
+  }
+
+  const inactiveTabStyle = {
+    color: primaryColor,
+    borderColor: primaryColor,
+    backgroundColor: 'white'
+  }
+
+  const ctaStyle = {
+    background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      {/* Hero section avec couleurs dynamiques */}
+      <div style={heroStyle} className="text-white">
         <div className="max-w-7xl mx-auto px-4 py-12 md:py-20">
           <div className="text-center">
             <div className="inline-block bg-white/20 backdrop-blur-sm rounded-full p-3 mb-6">
@@ -342,7 +383,8 @@ export default function ShopPage() {
             <div className="flex flex-wrap gap-4 justify-center">
               <Link
                 href={`/shop/${slug}/products`}
-                className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-full hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all"
+                className="px-6 py-3 bg-white font-semibold rounded-full hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all"
+                style={{ color: primaryColor }}
               >
                 Voir tous les produits
               </Link>
@@ -360,13 +402,13 @@ export default function ShopPage() {
       <div className="max-w-7xl mx-auto px-4 -mt-6">
         <div className="bg-white rounded-xl shadow-lg p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-4">
-            <div className="text-2xl text-blue-600 font-bold mb-2">
+            <div className="text-2xl font-bold mb-2" style={{ color: primaryColor }}>
               {shop.total_products || 0}
             </div>
             <div className="text-gray-600 text-sm">Produits</div>
           </div>
           <div className="text-center p-4">
-            <div className="text-2xl text-green-600 font-bold mb-2">
+            <div className="text-2xl font-bold mb-2" style={{ color: secondaryColor }}>
               {shop.total_orders || 0}
             </div>
             <div className="text-gray-600 text-sm">Commandes</div>
@@ -385,32 +427,35 @@ export default function ShopPage() {
           </div>
         </div>
       </div>
- 
 
       {/* Navigation */}
       <div className="max-w-7xl mx-auto px-4 mt-8">
         <nav className="flex flex-wrap gap-2 justify-center">
           <Link
             href={`/shop/${slug}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-full font-medium"
+            className="px-4 py-2 text-white rounded-full font-medium"
+            style={{ backgroundColor: primaryColor }}
           >
             Accueil
           </Link>
           <Link
             href={`/shop/${slug}/products`}
-            className="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-full font-medium hover:bg-blue-50"
+            className="px-4 py-2 bg-white border rounded-full font-medium hover:bg-gray-50"
+            style={{ color: primaryColor, borderColor: primaryColor }}
           >
             Tous les produits
           </Link>
           <Link
             href={`/shop/${slug}/categories`}
-            className="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-full font-medium hover:bg-blue-50"
+            className="px-4 py-2 bg-white border rounded-full font-medium hover:bg-gray-50"
+            style={{ color: primaryColor, borderColor: primaryColor }}
           >
             Catégories
           </Link>
           <Link
             href={`/shop/${slug}/about`}
-            className="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded-full font-medium hover:bg-blue-50"
+            className="px-4 py-2 bg-white border rounded-full font-medium hover:bg-gray-50"
+            style={{ color: primaryColor, borderColor: primaryColor }}
           >
             À propos
           </Link>
@@ -425,28 +470,23 @@ export default function ShopPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setActiveTab('featured')}
-                className={`px-6 py-2 rounded-full font-medium transition-all ${
-                  activeTab === 'featured'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-blue-600 border border-blue-600 hover:bg-blue-50'
-                }`}
+                className="px-6 py-2 rounded-full font-medium transition-all"
+                style={activeTab === 'featured' ? activeTabStyle : inactiveTabStyle}
               >
                 ⭐ En vedette
               </button>
               <button
                 onClick={() => setActiveTab('recent')}
-                className={`px-6 py-2 rounded-full font-medium transition-all ${
-                  activeTab === 'recent'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-blue-600 border border-blue-600 hover:bg-blue-50'
-                }`}
+                className="px-6 py-2 rounded-full font-medium transition-all"
+                style={activeTab === 'recent' ? activeTabStyle : inactiveTabStyle}
               >
                 🆕 Nouveautés
               </button>
             </div>
             <Link
               href={`/shop/${slug}/products`}
-              className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
+              className="font-medium flex items-center gap-2 hover:underline"
+              style={{ color: primaryColor }}
             >
               Voir tout
               <span>→</span>
@@ -475,7 +515,8 @@ export default function ShopPage() {
               </p>
               <Link
                 href={`/shop/${slug}/products`}
-                className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="inline-block px-6 py-3 text-white rounded-lg hover:opacity-90"
+                style={{ backgroundColor: primaryColor }}
               >
                 Découvrir tous les produits
               </Link>
@@ -492,6 +533,8 @@ export default function ShopPage() {
                     addToCart={cart.addToCart}
                     isLoadingAddToCart={cart.isLoading}
                     cart={cart}
+                    primaryColor={primaryColor}
+                    secondaryColor={secondaryColor}
                   />
                 ))}
             </div>
@@ -500,31 +543,37 @@ export default function ShopPage() {
 
         {/* Informations boutique détaillées */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <h2 className="text-2xl font-bold mb-6 text-center">Pourquoi acheter chez nous ?</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: primaryColor }}>
+            Pourquoi acheter chez nous ?
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-2xl mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 text-white"
+                   style={{ backgroundColor: primaryColor }}>
                 ⚡
               </div>
               <h3 className="font-bold text-lg mb-2">Traitement rapide</h3>
               <p className="text-gray-600">Commandes préparées sous 24-48h ouvrées</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-2xl mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 text-white"
+                   style={{ backgroundColor: secondaryColor }}>
                 🚚
               </div>
               <h3 className="font-bold text-lg mb-2">Livraison suivie</h3>
               <p className="text-gray-600">Suivi en temps réel de votre colis</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-2xl mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 text-white"
+                   style={{ backgroundColor: primaryColor }}>
                 ↩️
               </div>
               <h3 className="font-bold text-lg mb-2">Retours faciles</h3>
               <p className="text-gray-600">30 jours pour changer d'avis, frais inclus</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 text-2xl mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto mb-4 text-white"
+                   style={{ backgroundColor: secondaryColor }}>
                 📞
               </div>
               <h3 className="font-bold text-lg mb-2">Support dédié</h3>
@@ -533,8 +582,8 @@ export default function ShopPage() {
           </div>
         </div>
 
-        {/* Appel à action */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-8 text-center text-white">
+        {/* Appel à action avec couleurs dynamiques */}
+        <div style={ctaStyle} className="rounded-2xl p-8 text-center text-white">
           <h2 className="text-3xl font-bold mb-4">Prêt à faire vos achats ?</h2>
           <p className="text-xl mb-6 opacity-90 max-w-2xl mx-auto">
             Découvrez notre collection complète de produits soigneusement sélectionnés.
@@ -542,7 +591,8 @@ export default function ShopPage() {
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
               href={`/shop/${slug}/products`}
-              className="px-8 py-3 bg-white text-blue-600 font-bold rounded-full hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all"
+              className="px-8 py-3 bg-white font-bold rounded-full hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all"
+              style={{ color: primaryColor }}
             >
               Explorer tous les produits
             </Link>
@@ -559,142 +609,149 @@ export default function ShopPage() {
           </div>
         </div>
       </main>
-{/* Informations de contact - NOUVELLE SECTION */}
-{(shop.email || shop.phone || shop.address || shop.city || shop.country || shop.website || shop.instagram || shop.facebook || shop.twitter) && (
-  <div className="max-w-7xl mx-auto px-4 mt-8">
-    <div className="bg-white rounded-xl shadow-lg p-8">
-      <h2 className="text-2xl font-bold mb-6 text-center">📞 Contact & Informations</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Contact */}
-        {(shop.email || shop.phone || shop.address || shop.city || shop.country) && (
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="text-blue-600">📍</span>
-              Nous contacter
-            </h3>
-            <div className="space-y-3">
-              {shop.email && (
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400">✉️</span>
-                  <a 
-                    href={`mailto:${shop.email}`}
-                    className="text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    {shop.email}
-                  </a>
+
+      {/* Informations de contact - NOUVELLE SECTION */}
+      {(shop.email || shop.phone || shop.address || shop.city || shop.country || shop.website || shop.instagram || shop.facebook || shop.twitter) && (
+        <div className="max-w-7xl mx-auto px-4 mt-8">
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: primaryColor }}>
+              📞 Contact & Informations
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Contact */}
+              {(shop.email || shop.phone || shop.address || shop.city || shop.country) && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span style={{ color: primaryColor }}>📍</span>
+                    Nous contacter
+                  </h3>
+                  <div className="space-y-3">
+                    {shop.email && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-400">✉️</span>
+                        <a 
+                          href={`mailto:${shop.email}`}
+                          style={{ color: primaryColor }}
+                          className="hover:underline"
+                        >
+                          {shop.email}
+                        </a>
+                      </div>
+                    )}
+                    {shop.phone && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-400">📱</span>
+                        <a 
+                          href={`tel:${shop.phone}`}
+                          className="text-gray-700 hover:underline"
+                          style={{ '--tw-hover-color': primaryColor } as React.CSSProperties}
+                        >
+                          {shop.phone}
+                        </a>
+                      </div>
+                    )}
+                    {(shop.address || shop.city || shop.country) && (
+                      <div className="flex items-start gap-3">
+                        <span className="text-gray-400 mt-1">🏠</span>
+                        <div>
+                          {shop.address && <p className="text-gray-700">{shop.address}</p>}
+                          {(shop.city || shop.country) && (
+                            <p className="text-gray-600">
+                              {shop.city}{shop.city && shop.postal_code ? ` ${shop.postal_code}` : ''}
+                              {shop.city && shop.country ? ', ' : ''}
+                              {shop.country}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-              {shop.phone && (
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-400">📱</span>
-                  <a 
-                    href={`tel:${shop.phone}`}
-                    className="text-gray-700 hover:text-blue-600"
-                  >
-                    {shop.phone}
-                  </a>
-                </div>
-              )}
-              {(shop.address || shop.city || shop.country) && (
-                <div className="flex items-start gap-3">
-                  <span className="text-gray-400 mt-1">🏠</span>
-                  <div>
-                    {shop.address && <p className="text-gray-700">{shop.address}</p>}
-                    {(shop.city || shop.country) && (
-                      <p className="text-gray-600">
-                        {shop.city}{shop.city && shop.postal_code ? ` ${shop.postal_code}` : ''}
-                        {shop.city && shop.country ? ', ' : ''}
-                        {shop.country}
-                      </p>
+
+              {/* Réseaux sociaux & Site web */}
+              {(shop.website || shop.instagram || shop.facebook || shop.twitter) && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <span style={{ color: secondaryColor }}>🌐</span>
+                    Suivez-nous
+                  </h3>
+                  <div className="space-y-3">
+                    {shop.website && (
+                      <div className="flex items-center gap-3">
+                        <Link2 className="w-5 h-5 text-gray-400" />
+                        <a 
+                          href={shop.website.startsWith('http') ? shop.website : `https://${shop.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: primaryColor }}
+                          className="hover:underline"
+                        >
+                          Site web
+                        </a>
+                      </div>
+                    )}
+                    {shop.instagram && (
+                      <div className="flex items-center gap-3">
+                        <Instagram className="w-5 h-5 text-pink-500" />
+                        <a 
+                          href={`https://instagram.com/${shop.instagram.replace('@', '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-pink-600 hover:text-pink-700 hover:underline"
+                        >
+                          {shop.instagram}
+                        </a>
+                      </div>
+                    )}
+                    {shop.facebook && (
+                      <div className="flex items-center gap-3">
+                        <Facebook className="w-5 h-5 text-blue-600" />
+                        <a 
+                          href={shop.facebook.includes('facebook.com') ? shop.facebook : `https://facebook.com/${shop.facebook}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 hover:underline"
+                        >
+                          {shop.facebook.includes('facebook.com') ? 'Facebook' : shop.facebook}
+                        </a>
+                      </div>
+                    )}
+                    {shop.twitter && (
+                      <div className="flex items-center gap-3">
+                        <Twitter className="w-5 h-5 text-blue-400" />
+                        <a 
+                          href={`https://twitter.com/${shop.twitter.replace('@', '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-500 hover:underline"
+                        >
+                          {shop.twitter}
+                        </a>
+                      </div>
                     )}
                   </div>
                 </div>
               )}
             </div>
-          </div>
-        )}
 
-        {/* Réseaux sociaux & Site web */}
-        {(shop.website || shop.instagram || shop.facebook || shop.twitter) && (
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="text-purple-600">🌐</span>
-              Suivez-nous
-            </h3>
-            <div className="space-y-3">
-              {shop.website && (
-                <div className="flex items-center gap-3">
-                  <Link2 className="w-5 h-5 text-gray-400" />
-                  <a 
-                    href={shop.website.startsWith('http') ? shop.website : `https://${shop.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    Site web
-                  </a>
-                </div>
-              )}
-              {shop.instagram && (
-                <div className="flex items-center gap-3">
-                  <Instagram className="w-5 h-5 text-pink-500" />
-                  <a 
-                    href={`https://instagram.com/${shop.instagram.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-pink-600 hover:text-pink-700 hover:underline"
-                  >
-                    {shop.instagram}
-                  </a>
-                </div>
-              )}
-              {shop.facebook && (
-                <div className="flex items-center gap-3">
-                  <Facebook className="w-5 h-5 text-blue-600" />
-                  <a 
-                    href={shop.facebook.includes('facebook.com') ? shop.facebook : `https://facebook.com/${shop.facebook}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 hover:underline"
-                  >
-                    {shop.facebook.includes('facebook.com') ? 'Facebook' : shop.facebook}
-                  </a>
-                </div>
-              )}
-              {shop.twitter && (
-                <div className="flex items-center gap-3">
-                  <Twitter className="w-5 h-5 text-blue-400" />
-                  <a 
-                    href={`https://twitter.com/${shop.twitter.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-500 hover:underline"
-                  >
-                    {shop.twitter}
-                  </a>
-                </div>
-              )}
-            </div>
+            {/* À propos de la boutique */}
+            {shop.description && (
+              <div className="mt-8 pt-8 border-t border-gray-200">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <span style={{ color: secondaryColor }}>🏪</span>
+                  À propos de {shop.name}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {shop.description}
+                </p>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* À propos de la boutique */}
-      {shop.description && (
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <span className="text-green-600">🏪</span>
-            À propos de {shop.name}
-          </h3>
-          <p className="text-gray-600 leading-relaxed">
-            {shop.description}
-          </p>
         </div>
       )}
-    </div>
-  </div>
-)}
+
       {/* Panier flottant */}
       <CartSidebar slug={slug} cart={cart} />
     </div>

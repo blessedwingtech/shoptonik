@@ -3,7 +3,7 @@ Endpoints pour les clients (création et consultation de leurs commandes)
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from typing import List, Optional
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 import uuid
 # 4. Générer un numéro de commande unique
@@ -91,7 +91,7 @@ async def create_order(
             "product_name": product.name,
             "product_price": item.product_price,
             "product_sku": product.sku,
-            "product_image": product.images[0] if product.images else None,
+            "product_image": (product.images[0] if isinstance(product.images, list) and len(product.images) > 0 else None),
             "quantity": item.quantity,
             "total_price": item_total
         })
@@ -170,7 +170,7 @@ async def get_my_orders(
     # Supprimer la vérification if not current_user - inutile car
     # get_current_user() lève déjà une exception 401 si pas authentifié
     
-    orders = db.query(Order).filter(
+    orders = db.query(Order).options(joinedload(Order.shop)).filter(
         Order.customer_id == current_user.id
     ).order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
 
