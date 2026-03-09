@@ -28,7 +28,7 @@ export default function BecomeSellerPage() {
 
   const checkRequestStatus = async () => {
     try {
-      const response = await api.request('/seller/request/status')
+      const response = await api.getSellerRequestStatus()
       if (response.data) {
         setRequestStatus(response.data.status)
       }
@@ -50,10 +50,11 @@ export default function BecomeSellerPage() {
     setSuccess('')
 
     try {
-      const response = await api.request('/seller/request', {
-        method: 'POST',
-        body: JSON.stringify(formData)
-      })
+      // const response = await api.request('/seller/request', {
+      //   method: 'POST',
+      //   body: JSON.stringify(formData)
+      // })
+      const response = await api.submitSellerRequest(formData)
 
       if (response.data) {
         setSuccess('✅ Demande envoyée avec succès ! Un administrateur va l\'examiner.')

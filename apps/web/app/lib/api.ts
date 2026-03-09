@@ -1057,6 +1057,23 @@ async rejectSellerRequest(userId: string) {
   }, false)
 }
 
+// Dans api.ts, avec les autres méthodes seller
+async getSellerRequestStatus() {
+  return this.request('/seller/request/status', {}, false)
+}
+
+async submitSellerRequest(data: {
+  company_name: string
+  vat_number: string
+  address: string
+  phone: string
+}) {
+  return this.request('/seller/request', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }, false)
+}
+
 async getPlatformStats() {
   return this.request('/public/stats', {}, false)  // Route publique
 }
