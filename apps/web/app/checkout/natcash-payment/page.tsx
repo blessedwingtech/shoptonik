@@ -1,25 +1,25 @@
 // apps/web/app/checkout/natcash-payment/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'  // ← AJOUTER Suspense
 import { useSearchParams, useRouter } from 'next/navigation'
 import { api } from '@/app/lib/api'
 
-// Ajoutez cette interface
 interface NatCashResponse {
   success: boolean
   transaction_id?: string
   message?: string
 }
 
-export default function NatCashPaymentPage() {
+// Contenu principal qui utilise useSearchParams
+function NatCashPaymentContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  
+
   const orderId = searchParams.get('order_id') ?? ''
   const amount = searchParams.get('amount') ?? '0'
   const reference = searchParams.get('reference') ?? ''
-  
+
   const [status, setStatus] = useState<'pending' | 'processing' | 'success'>('pending')
   const [phone, setPhone] = useState('')
   const [code, setCode] = useState('')
@@ -37,14 +37,14 @@ export default function NatCashPaymentPage() {
       return
     }
     setStatus('processing')
-    
+
     try {
       const response = await api.confirmNatCashPayment({
         transaction_id: reference,
         order_id: orderId,
         phone: phone || '50934567890'
       }) as { data?: NatCashResponse }
-      
+
       if (response.data?.success) {
         setStatus('success')
         setTimeout(() => router.push(`/order-confirmation/${orderId}`), 2000)
@@ -123,5 +123,21 @@ export default function NatCashPaymentPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Composant principal exporté avec Suspense
+export default function NatCashPaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement du paiement...</p>
+        </div>
+      </div>
+    }>
+      <NatCashPaymentContent />
+    </Suspense>
   )
 }

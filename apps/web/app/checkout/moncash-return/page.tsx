@@ -1,11 +1,12 @@
 // apps/web/app/checkout/moncash-return/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'  // ← AJOUTER Suspense
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/app/contexts/AuthContext'
 
-export default function MoncashReturnPage() {
+// Contenu principal qui utilise useSearchParams
+function MoncashReturnContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { token } = useAuth()
@@ -24,7 +25,6 @@ export default function MoncashReturnPage() {
       }
 
       try {
-        // Vérifier le paiement via votre backend
         const response = await fetch(
           `/api/v1/payments/verify-moncash/${orderId}`,
           {
@@ -40,8 +40,7 @@ export default function MoncashReturnPage() {
           setStatus('success')
           localStorage.removeItem('pending_order_id')
           localStorage.removeItem('payment_provider')
-          
-          // Rediriger vers confirmation après 2 secondes
+
           setTimeout(() => {
             router.push(`/order-confirmation/${orderId}`)
           }, 2000)
@@ -94,3 +93,20 @@ export default function MoncashReturnPage() {
     </div>
   )
 }
+
+// Composant principal exporté avec Suspense
+export default function MoncashReturnPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <MoncashReturnContent />
+    </Suspense>
+  )
+}
+

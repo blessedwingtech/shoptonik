@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'  // ← AJOUTER Suspense
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/app/contexts/AuthContext'
 import { api } from '@/app/lib/api'
@@ -8,7 +8,8 @@ import { useCart } from '@/app/hooks/useCart'
 import Link from 'next/link'
 import PaymentMethods from '@/app/components/PaymentMethods'
 
-export default function CheckoutPage() {
+// Contenu principal qui utilise useSearchParams
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, isAuthenticated } = useAuth()
@@ -504,5 +505,21 @@ export default function CheckoutPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Composant principal exporté avec Suspense
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement du checkout...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   )
 }
