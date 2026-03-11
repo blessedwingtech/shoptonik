@@ -10,10 +10,11 @@ class Settings(BaseSettings):
     debug: bool = True
     
     # Database
-    database_url: str = "sqlite:///./shoptonik.db"
+      
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./shoptonik.db")
     
-    # Security
-    secret_key: str = "shoptonik-secret-key-change-in-production"
+    # Security 
+    secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
@@ -30,10 +31,15 @@ class Settings(BaseSettings):
     
     # CORS - Changez "list" en "List[str]"
     cors_origins: List[str] = ["http://localhost:3000", "http://localhost:3001", "http://10.70.51.229:3000"]
-    
-    stripe_secret_key: str = "sk_test_51SJecMIk70JNbuKZDzgkMpaxZ14YjvslDE1A9KlKiinQMY7SRiWRv8iEIZqNeCvHKtgGhGzjUV7chCByxkSnXOsN00GrNgqy9c"  # Remplacez par votre vraie clé
-    stripe_public_key: str = "pk_test_51SJecMIk70JNbuKZ2ti3MJ25kWDaFCcK1FkW5zrWp3ptL7YaoE2Pbgq5gD92ldWaXkQx8Ud2J3Su8AgcECK14RV300yjSmgkEu"  # Remplacez par votre vraie clé
-    stripe_webhook_secret: Optional[str] = None 
+  
+
+ 
+    # Security (ligne ~16)
+
+    # Stripe (lignes ~35-37)
+    stripe_secret_key: str = os.getenv("STRIPE_SECRET_KEY", "")
+    stripe_public_key: str = os.getenv("STRIPE_PUBLIC_KEY", "")
+    stripe_webhook_secret: Optional[str] = os.getenv("STRIPE_WEBHOOK_SECRET", None)
 
     frontend_url: str = "http://localhost:3000"
     backend_url: str = "http://localhost:8000"

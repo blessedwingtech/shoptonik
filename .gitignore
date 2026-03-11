@@ -34,3 +34,8 @@ backend/uploads/
  
  
 *_.tsx
+
+.env
+.env.production
+.env.local
+.env.*

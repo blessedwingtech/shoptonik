@@ -11,7 +11,7 @@ import CartSidebar from '@/app/components/CartSidebar'
 function ProductCard({ product, slug, addToCart, cartLoading, cartHook }: any) {
   const [localLoading, setLocalLoading] = useState(false)
   
-  const cartItem = cartHook?.items?.find((item: any) => item.product_id === product.id)
+  const cartItem = cartHook?.cart?.items?.find((item: any) => item.product_id === product.id)
   const quantityInCart = cartItem?.quantity || 0
   const availableStock = product.stock - quantityInCart
   const canAdd = availableStock > 0
