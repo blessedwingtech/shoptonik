@@ -1,6 +1,7 @@
+// apps/web/app/search/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'  // ← AJOUTER Suspense
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { api } from '@/app/lib/api'
@@ -32,12 +33,13 @@ interface Product {
   is_available: boolean
 }
 
-export default function SearchPage() {
+// Composant qui utilise useSearchParams
+function SearchContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const query = searchParams.get('q') || ''
   const categoryParam = searchParams.get('category') || 'all'
-  
+
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, total: 0, pages: 1 })
@@ -46,7 +48,7 @@ export default function SearchPage() {
     minPriceAvailable: 0,
     maxPriceAvailable: 100000
   })
-  
+
   const [filters, setFilters] = useState<SearchFilters>({
     category: categoryParam !== 'all' ? categoryParam : '',
     minPrice: 0,
@@ -128,7 +130,7 @@ export default function SearchPage() {
           <div className="lg:w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow p-6 sticky top-4">
               <h2 className="font-semibold text-lg mb-4">Filtres</h2>
-              
+
               {/* Catégorie */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -146,7 +148,7 @@ export default function SearchPage() {
                 </select>
               </div>
 
-              {/* Prix - Version corrigée */}
+              {/* Prix */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Prix
@@ -255,7 +257,7 @@ export default function SearchPage() {
                             <span className="text-gray-400 text-4xl">📦</span>
                           </div>
                         )}
-                        
+
                         {/* Badges */}
                         {product.has_discount && (
                           <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
@@ -282,25 +284,25 @@ export default function SearchPage() {
 
                         {/* Tags */}
                         {product.tags && product.tags.length > 0 && (
-  <div className="flex flex-wrap gap-1 mb-3">
-    {product.tags.slice(0, 3).map((tag: string, index: number) => (
-      <span
-        key={index}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          router.push(`/search/tag/${encodeURIComponent(tag)}`)
-        }}
-        className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-blue-100 hover:text-blue-600 transition-colors cursor-pointer"
-      >
-        {tag}
-      </span>
-    ))}
-    {product.tags.length > 3 && (
-      <span className="text-xs text-gray-400">+{product.tags.length - 3}</span>
-    )}
-  </div>
-)}
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {product.tags.slice(0, 3).map((tag: string, index: number) => (
+                              <span
+                                key={index}
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  router.push(`/search/tag/${encodeURIComponent(tag)}`)
+                                }}
+                                className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-blue-100 hover:text-blue-600 transition-colors cursor-pointer"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {product.tags.length > 3 && (
+                              <span className="text-xs text-gray-400">+{product.tags.length - 3}</span>
+                            )}
+                          </div>
+                        )}
 
                         {/* Prix */}
                         <div className="flex items-center justify-between">
@@ -356,3 +358,18 @@ export default function SearchPage() {
   )
 }
 
+// Composant principal avec Suspense
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement de la recherche...</p>
+        </div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
+  )
+}
