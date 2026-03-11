@@ -5,13 +5,20 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { api } from '@/app/lib/api'
 
+// Ajoutez cette interface
+interface NatCashResponse {
+  success: boolean
+  transaction_id?: string
+  message?: string
+}
+
 export default function NatCashPaymentPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   
-  const orderId = searchParams.get('order_id')
-  const amount = searchParams.get('amount')
-  const reference = searchParams.get('reference')
+  const orderId = searchParams.get('order_id') ?? ''
+  const amount = searchParams.get('amount') ?? '0'
+  const reference = searchParams.get('reference') ?? ''
   
   const [status, setStatus] = useState<'pending' | 'processing' | 'success'>('pending')
   const [phone, setPhone] = useState('')
@@ -25,6 +32,10 @@ export default function NatCashPaymentPage() {
   }, [timeLeft])
 
   const handleSimulateSuccess = async () => {
+    if (!orderId || !reference) {
+      console.error('OrderId ou reference manquant')
+      return
+    }
     setStatus('processing')
     
     try {
@@ -32,7 +43,7 @@ export default function NatCashPaymentPage() {
         transaction_id: reference,
         order_id: orderId,
         phone: phone || '50934567890'
-      })
+      }) as { data?: NatCashResponse }
       
       if (response.data?.success) {
         setStatus('success')

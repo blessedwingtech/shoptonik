@@ -24,7 +24,7 @@ export default function AllCategoriesPage() {
         const allCategories = Array.from(new Set(
           shops
             .map(shop => shop.category)
-            .filter(cat => cat && cat.trim() !== '') // Filtre les catégories vides
+            .filter((cat): cat is string => cat !== null && cat !== undefined && cat.trim() !== '')//.filter(cat => cat && cat.trim() !== '') // Filtre les catégories vides
             .filter(cat => cat.toLowerCase() !== 'general') // Exclut 'general'
         ))
         setCategories(allCategories.sort()) // Trie par ordre alphabétique
@@ -89,7 +89,7 @@ export default function AllCategoriesPage() {
             {/* Grille des catégories */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {categories.map(category => {
-                const shopsCount = shopsByCategory[category]?.length || 0
+                const shopsCount = shopsByCategory[category]?.length ?? 0
                 const icon = getCategoryIcon(category)
                 
                 return (
@@ -130,7 +130,7 @@ export default function AllCategoriesPage() {
                               {shop.name}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {shop.total_products || 0} produits
+                              {shop?.total_products ?? 0} produits
                             </p>
                           </div>
                         </div>
@@ -171,13 +171,18 @@ export default function AllCategoriesPage() {
                 </div>
                 <div className="bg-white p-4 rounded-xl shadow text-center">
                   <div className="text-2xl font-bold text-purple-600">
-                    {Math.max(...Object.values(shopsByCategory).map(shops => shops?.length || 0))}
+                    {/* {Math.max(...Object.values(shopsByCategory).map(shops => shops?.length || 0))} */}
+                    {Math.max(...Object.values(shopsByCategory).map(shops => shops?.length ?? 0), 0)}
                   </div>
                   <div className="text-sm text-gray-600">Plus populaire</div>
                 </div>
                 <div className="bg-white p-4 rounded-xl shadow text-center">
                   <div className="text-2xl font-bold text-orange-600">
-                    {Math.round(Object.values(shopsByCategory).reduce((sum, shops) => sum + (shops?.length || 0), 0) / categories.length)}
+                    {/* {Math.round(Object.values(shopsByCategory).reduce((sum, shops) => sum + (shops?.length || 0), 0) / categories.length)} */}
+                    {Math.round(
+                        Object.values(shopsByCategory).reduce((sum, shops) => sum + (shops?.length || 0), 0) / 
+                        (categories.length || 1)   
+                      )}
                   </div>
                   <div className="text-sm text-gray-600">Moyenne par catégorie</div>
                 </div>
