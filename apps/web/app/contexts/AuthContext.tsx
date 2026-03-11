@@ -21,6 +21,8 @@ interface User {
   phone?: string | null
   avatar?: string | null 
   is_admin?: boolean 
+  seller_requested_at?: string | null
+  seller_approved_at?: string | null
 }
 
 interface AuthContextType {

@@ -68,10 +68,12 @@ export default function OrderDetailsPage() {
       }
 
       const shopSlug = shopsResponse.data[0].slug
-      const response = await api.request<any>(`/shops/${shopSlug}/orders/${orderId}`)
+      const response = await api.getOrderDetails(shopSlug, orderId)
       
       if (response.data) {
-        setOrder(response.data)
+        if (response.data) {
+            setOrder(response.data as OrderDetails)
+          }
       } else {
         setError('Commande non trouvée')
       }
@@ -199,8 +201,7 @@ export default function OrderDetailsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             Commande #{order.order_number}
-          </h1>
-          // Dans MyOrdersPage, remplacez la ligne de date par :
+          </h1> 
 
 <p className="text-gray-600 text-sm mt-1">
   Passée le {new Date(order.created_at).toLocaleDateString('fr-FR', {

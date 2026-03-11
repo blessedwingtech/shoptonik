@@ -43,9 +43,7 @@ export default function ShopDashboard() {
 
       // Charger les produits récents
       const productsResponse = await api.getShopProducts(shopSlug, {
-        limit: 5,
-        sort_by: 'created_at',
-        sort_order: 'desc'
+        per_page: 5
       })
       if (productsResponse.data) {
         setRecentProducts(productsResponse.data)

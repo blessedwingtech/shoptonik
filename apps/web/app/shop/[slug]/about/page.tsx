@@ -129,7 +129,7 @@ export default function AboutPage() {
       setShop(response.data)
 
       // Charger les produits pour les stats
-      const productsResponse = await api.getPublicShopProducts(slug, { limit: 100 })
+      const productsResponse = await api.getPublicShopProducts(slug, { per_page: 100 })
       if (productsResponse.data) {
         const products = productsResponse.data
   console.log('📦 Premier produit:', products[0])

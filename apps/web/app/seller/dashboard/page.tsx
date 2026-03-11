@@ -175,31 +175,34 @@ export default function SellerDashboard() {
 
 // Composants auxiliaires
 function StatCard({ icon, label, value, color }: any) {
-  const colors = {
-    blue: 'bg-blue-100 text-blue-600',
-    green: 'bg-green-100 text-green-600',
-    yellow: 'bg-yellow-100 text-yellow-600',
-    purple: 'bg-purple-100 text-purple-600',
-  }
-  
-  return (
-    <div className="bg-white overflow-hidden shadow rounded-lg">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className={`flex-shrink-0 h-10 w-10 rounded-full ${colors[color]} flex items-center justify-center`}>
-            <span>{icon}</span>
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">{label}</dt>
-              <dd className="text-lg font-medium text-gray-900">{value}</dd>
-            </dl>
+    const colors: Record<string, string> = {
+      blue: 'bg-blue-100 text-blue-600',
+      green: 'bg-green-100 text-green-600',
+      yellow: 'bg-yellow-100 text-yellow-600',
+      purple: 'bg-purple-100 text-purple-600',
+    }
+
+    const colorClass = colors[color] || 'bg-gray-100 text-gray-600'
+
+    return (
+      <div className="bg-white overflow-hidden shadow rounded-lg">
+        <div className="p-5">
+          <div className="flex items-center">
+            <div className={`flex-shrink-0 h-10 w-10 rounded-full ${colorClass} flex items-center justify-center`}>
+              <span>{icon}</span>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">{label}</dt>
+                <dd className="text-lg font-medium text-gray-900">{value}</dd>
+              </dl>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
 }
+
 
 function ShopCard({ shop }: { shop: Shop }) {
   return (
@@ -289,19 +292,21 @@ function QuickActions() {
 }
 
 function ActionLink({ href, icon, label, color }: any) {
-  const colors = {
+  const colors: Record<string, string> = {
     green: 'text-green-600 bg-green-100',
     yellow: 'text-yellow-600 bg-yellow-100',
     gray: 'text-gray-600 bg-gray-100',
   }
-  
+
+  const colorClass = colors[color] || 'bg-gray-100 text-gray-600'
+
   return (
     <Link
       href={href}
       className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow"
     >
       <div className="flex items-center">
-        <div className={`h-10 w-10 rounded-full ${colors[color]} flex items-center justify-center mr-3`}>
+        <div className={`h-10 w-10 rounded-full ${colorClass} flex items-center justify-center mr-3`}>
           <span>{icon}</span>
         </div>
         <span className="font-medium">{label}</span>

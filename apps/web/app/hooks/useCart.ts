@@ -65,7 +65,7 @@ export const useCart = (slug?: string) => {
       console.log('🛒 useCart - Appel API getCart...')
       const response = await api.getCart(shopSlug)
 
-      if (response.error && response.status === 400) {
+      if (response.error && response.statusCode === 400) {
         console.warn('⚠️ useCart - API a rejeté le slug:', response.error)
         setCart(null)
         setError('')

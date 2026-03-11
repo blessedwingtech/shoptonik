@@ -110,7 +110,9 @@ export default function HomePage() {
         setShops(getMockShops())
       } else if (response.data && Array.isArray(response.data)) {
         console.log(`✅ ${response.data.length} boutiques chargées`)
-        setShops(response.data)
+        if (response.data) {
+          setShops(response.data as PublicShop[])
+        }
       } else {
         console.warn('⚠️ Données API invalides')
         setShops(getMockShops())
@@ -124,17 +126,40 @@ export default function HomePage() {
     }
   }
 
+  // const loadPlatformStats = async () => {
+  //   try {
+  //     // Utilisez getPublicPlatformStats() si c'est le nom correct
+  //     const response = await api.getPlatformStats()
+  //     if (response.data) {
+  //       setStats({
+  //         total_shops: response.data.total_shops,
+  //         total_products: response.data.total_products,
+  //         total_orders: response.data.total_orders,
+  //         total_revenue: response.data.total_revenue,
+  //         total_sellers: response.data.total_sellers
+  //       })
+  //     }
+  //   } catch (err) {
+  //     console.error('Erreur chargement stats:', err)
+  //   }
+  // }
   const loadPlatformStats = async () => {
     try {
-      // Utilisez getPublicPlatformStats() si c'est le nom correct
       const response = await api.getPlatformStats()
       if (response.data) {
+        const statsData = response.data as {
+          total_shops: number
+          total_products: number
+          total_orders: number
+          total_revenue: number
+          total_sellers: number
+        }
         setStats({
-          total_shops: response.data.total_shops,
-          total_products: response.data.total_products,
-          total_orders: response.data.total_orders,
-          total_revenue: response.data.total_revenue,
-          total_sellers: response.data.total_sellers
+          total_shops: statsData.total_shops || 0,
+          total_products: statsData.total_products || 0,
+          total_orders: statsData.total_orders || 0,
+          total_revenue: statsData.total_revenue || 0,
+          total_sellers: statsData.total_sellers || 0
         })
       }
     } catch (err) {

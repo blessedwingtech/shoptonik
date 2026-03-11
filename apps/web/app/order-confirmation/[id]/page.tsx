@@ -56,7 +56,8 @@ export default function OrderConfirmationPage() {
     try {
       const response = await api.getPublicShop(shopId)
       if (response.data) {
-        setShopNames(prev => ({ ...prev, [shopId]: response.data.name }))
+        //setShopNames(prev => ({ ...prev, [shopId]: response.data.name }))
+        setShopNames(prev => ({ ...prev, [shopId]: response.data?.name || '' }))
       }
     } catch (err) {
       console.error('Erreur chargement boutique:', err)

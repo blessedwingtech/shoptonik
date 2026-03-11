@@ -274,7 +274,7 @@ export default function ShopClient({ slug }: { slug: string }) {
     try {
       const response = await api.getPublicShopProducts(slug, {
         featured: true,
-        limit: 8,
+        per_page: 8,
         is_active: true
       })
       if (response.data) {
@@ -290,7 +290,7 @@ export default function ShopClient({ slug }: { slug: string }) {
       const response = await api.getPublicShopProducts(slug, {
         sort_by: 'created_at',
         sort_order: 'desc',
-        limit: 8,
+        per_page: 8,
         is_active: true
       })
       if (response.data) {

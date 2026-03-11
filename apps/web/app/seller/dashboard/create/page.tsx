@@ -55,7 +55,7 @@ export default function CreateShopPage() {
       
       const response = await api.createShop({
         name: formData.name,
-        description: formData.description || null,
+        description: formData.description || undefined,
         category: formData.category
       })
       

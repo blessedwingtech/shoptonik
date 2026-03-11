@@ -21,11 +21,7 @@ export function useProductCategories() {
   const loadCategories = async () => {
     try {
       // Utiliser l'API existante
-      const response = await api.request<ProductCategory[]>(
-        '/public/categories/products',
-        {},
-        false // Pas de retry d'authentification
-      )
+      const response = await api.getPublicCategories()
 
       if (response.data) {
         // Ajouter l'option vide au début

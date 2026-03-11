@@ -3,30 +3,14 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/contexts/AuthContext'
-import { api } from '@/app/lib/api'
+import { api, type Order} from '@/app/lib/api'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr } from 'date-fns/locale' 
 
-interface Order {
-  id: string
-  order_number: string
-  customer_name: string
-  customer_email: string
-  customer_phone?: string
-  total_amount: number
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  items: Array<{
-    product_name: string
-    quantity: number
-    product_price: number
-    total_price: number
-  }>
-  created_at: string
-  payment_status: string
-  payment_method: string
-  tracking_number?: string
-}
+ 
+
+ 
 
 export default function SellerOrdersPage() {
   const { user } = useAuth()
@@ -64,7 +48,7 @@ export default function SellerOrdersPage() {
   const loadOrders = async () => {
     setIsLoading(true)
     try {
-      const response = await api.getShopOrders(selectedShop, showPendingOnly)
+      const response = await api.getShopOrders(selectedShop)
       if (response.data) {
         let filteredOrders = response.data
         if (filterStatus !== 'all') {
@@ -92,7 +76,7 @@ export default function SellerOrdersPage() {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
-      await api.updateOrderStatus(selectedShop, orderId, { status })
+      await api.updateOrderStatus(selectedShop, orderId, status)
       loadOrders()
       loadStats()
     } catch (err) {
@@ -246,7 +230,7 @@ export default function SellerOrdersPage() {
                     <div className="mb-4">
                       <h4 className="font-medium text-gray-700 mb-2">Articles</h4>
                       <div className="space-y-2">
-                        {order.items.map((item, index) => (
+                        {order.items.map((item: { product_name: string; quantity: number; product_price: number; total_price: number }, index: number) => (
                           <div key={index} className="flex justify-between text-sm">
                             <span>
                               {item.quantity}x {item.product_name}

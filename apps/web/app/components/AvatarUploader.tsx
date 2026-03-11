@@ -46,57 +46,61 @@ export default function AvatarUploader({ currentAvatar, username, onUpload, onCl
   }
 
   const handleCrop = async () => {
-    if (!cropper) {
-      alert("Veuillez d'abord sélectionner une image")
-      return
-    }
-
-    setIsUploading(true)
-    try {
-      // Obtenir l'image recadrée en canvas
-      const canvas = cropper.getCroppedCanvas({
-        width: 200,
-        height: 200,
-        minWidth: 100,
-        minHeight: 100,
-        maxWidth: 500,
-        maxHeight: 500,
-        fillColor: '#fff',
-        imageSmoothingEnabled: true,
-        imageSmoothingQuality: 'high',
-      })
-      
-      if (!canvas) {
-        throw new Error('Impossible de recadrer l\'image')
-      }
-
-      // Convertir le canvas en blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob!)
-        }, 'image/jpeg', 0.9)
-      })
-
-      const file = new File([blob], `avatar-${Date.now()}.jpg`, { 
-        type: 'image/jpeg' 
-      })
-      
-      // Upload via l'API
-      const response = await api.uploadAvatar(file)
-      
-      if (response.data?.url) {
-        onUpload(response.data.url)
-        onClose() // Fermer le modal après upload réussi
-      } else {
-        alert('Erreur lors de l\'upload')
-      }
-    } catch (error) {
-      console.error('Erreur upload avatar:', error)
-      alert('Erreur lors de l\'upload de l\'image')
-    } finally {
-      setIsUploading(false)
-    }
+  if (!cropper) {
+    alert("Veuillez d'abord sélectionner une image")
+    return
   }
+
+  setIsUploading(true)
+  try {
+    // Obtenir l'image recadrée en canvas
+    const canvas = cropper.getCroppedCanvas({
+      width: 200,
+      height: 200,
+      minWidth: 100,
+      minHeight: 100,
+      maxWidth: 500,
+      maxHeight: 500,
+      fillColor: '#fff',
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    })
+
+    if (!canvas) {
+      throw new Error('Impossible de recadrer l\'image')
+    }
+
+    // Convertir le canvas en blob - VERSION CORRIGÉE
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob: Blob | null) => {
+        if (blob) {
+          resolve(blob)
+        } else {
+          reject(new Error('Échec de création du blob'))
+        }
+      }, 'image/jpeg', 0.9)
+    })
+
+    const file = new File([blob], `avatar-${Date.now()}.jpg`, {
+      type: 'image/jpeg'
+    })
+
+    // Upload via l'API
+    const response = await api.uploadAvatar(file)
+
+    if (response.data?.url) {
+      onUpload(response.data.url)
+      onClose() // Fermer le modal après upload réussi
+    } else {
+      alert('Erreur lors de l\'upload')
+    }
+  } catch (error) {
+    console.error('Erreur upload avatar:', error)
+    alert('Erreur lors de l\'upload de l\'image')
+  } finally {
+    setIsUploading(false)
+  }
+}
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -154,10 +158,8 @@ export default function AvatarUploader({ currentAvatar, username, onUpload, onCl
                 scalable={true}
                 cropBoxMovable={true}
                 cropBoxResizable={true}
-                ref={(cropperRef) => {
-                  if (cropperRef) {
-                    setCropper(cropperRef.cropper);
-                  }
+                onInitialized={(instance) => {
+                  setCropper(instance)
                 }}
               />
               

@@ -15,6 +15,8 @@ export interface User {
   total_shops: number
   created_at: string
   updated_at?: string
+  seller_requested_at?: string | null
+  seller_approved_at?: string | null
 }
 
 export interface UserUpdate {
@@ -51,7 +53,10 @@ export interface SellerRequest {
   phone: string | null
   requested_at: string
 }
-
+export interface ProductCategory {
+  value: string
+  label: string
+}
 // Dans api.ts, après SellerRequest
 export interface SellerRequestStatusResponse {
   status: 'none' | 'pending' | 'approved' | 'rejected'
@@ -311,16 +316,39 @@ export interface OrderItem {
   total_price: number
 }
 
+// export interface Order {
+//   id: string
+//   order_number: string
+//   customer_name: string
+//   customer_email: string
+//   total_amount: number
+//   status: string
+//   items: OrderItem[]
+//   created_at: string
+  
+   
 export interface Order {
   id: string
   order_number: string
   customer_name: string
   customer_email: string
+  customer_phone?: string
   total_amount: number
-  status: string
-  items: OrderItem[]
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  items: Array<{
+    product_name: string
+    quantity: number
+    product_price: number
+    total_price: number
+  }>
   created_at: string
+  payment_status: string
+  payment_method: string
+  tracking_number?: string 
+  shop_id?: string
 }
+
+
 
 export interface OrderStats {
   total_orders: number
@@ -377,6 +405,12 @@ interface Api {
 }
 
 class ApiClient {
+  async getOrderDetails(shopSlug: string, orderId: string): Promise<ApiResponse<Order>> {
+    return this.request<Order>(`/shops/${shopSlug}/orders/${orderId}`, {}, false)
+  }
+  async getPublicCategories(): Promise<ApiResponse<ProductCategory[]>> {
+    return this.request<ProductCategory[]>(`/public/categories/products`, {}, false)
+  }
   private token: string | null = null
   private refreshToken: string | null = null
 
@@ -662,7 +696,7 @@ class ApiClient {
       search?: string
       min_price?: number
       max_price?: number
-      in_stock?: boolean
+      in_stock?: boolean 
     } = {}
   ) {
     const queryParams = new URLSearchParams()
@@ -934,6 +968,7 @@ async getPublicShopProducts(
     per_page?: number
     category?: string
     featured?: boolean
+    is_active?: boolean
     digital?: boolean
     min_price?: number
     max_price?: number

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useCart } from '@/app/hooks/useCart'
 import { useParams } from 'next/navigation'
-import { api, type Product } from '@/app/lib/api'
+import { api, type PublicProduct } from '@/app/lib/api'  // ← CORRECT
 import Link from 'next/link'
 import CartSidebar from '@/app/components/CartSidebar'
 
@@ -11,7 +11,7 @@ import CartSidebar from '@/app/components/CartSidebar'
 function ProductCard({ product, slug, addToCart, cartLoading, cartHook }: any) {
   const [localLoading, setLocalLoading] = useState(false)
   
-  const cartItem = cartHook?.cart?.items?.find((item: any) => item.product_id === product.id)
+  const cartItem = cartHook?.items?.find((item: any) => item.product_id === product.id)
   const quantityInCart = cartItem?.quantity || 0
   const availableStock = product.stock - quantityInCart
   const canAdd = availableStock > 0
@@ -113,7 +113,7 @@ function ProductCard({ product, slug, addToCart, cartLoading, cartHook }: any) {
         {/* Tags */}
         {product.tags && product.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {product.tags.slice(0, 3).map(tag => (
+            {product.tags.slice(0, 3).map((tag: string) => (
               <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                 {tag}
               </span>
@@ -176,9 +176,9 @@ export default function ProductsPage() {
   const params = useParams()
   const slug = params.slug as string
   
-  const [allProducts, setAllProducts] = useState<Product[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
+  const [allProducts, setAllProducts] = useState<PublicProduct[]>([])  // ← CHANGÉ
+  const [filteredProducts, setFilteredProducts] = useState<PublicProduct[]>([])  // ← CHANGÉ
+  const [displayedProducts, setDisplayedProducts] = useState<PublicProduct[]>([])  // ← CHANGÉ
   const [isLoading, setIsLoading] = useState(true)
   const [shop, setShop] = useState<any>(null)
   
@@ -203,20 +203,21 @@ export default function ProductsPage() {
   const { addToCart, isLoading: cartLoading, cart } = cartHook
 
   // Extraire les catégories uniques
-  const categories = ['all', ...new Set(allProducts.map(p => p.category).filter(Boolean))]
+  const categories = ['all', ...new Set(allProducts.map(p => p.category).filter(Boolean) as string[])]
   
   // Extraire les tags uniques
   const allTags = Array.from(new Set(allProducts.flatMap(p => p.tags || [])))
 
   // Fonction pour calculer le stock disponible réel
-  const getAvailableStock = (product: Product): number => {
-    const cartItem = cart?.cart?.items?.find((item: any) => item.product_id === product.id)
+  const getAvailableStock = (product: PublicProduct): number => {  // ← CHANGÉ
+    const items = cart?.items || []
+    const cartItem = items.find((item: any) => item.product_id === product.id)
     const quantityInCart = cartItem?.quantity || 0
     return product.stock - quantityInCart
   }
 
   // Fonction pour vérifier si on peut acheter
-  const isProductInStock = (product: Product): boolean => {
+  const isProductInStock = (product: PublicProduct): boolean => {  // ← CHANGÉ
     return getAvailableStock(product) > 0
   }
 
@@ -259,9 +260,8 @@ export default function ProductsPage() {
       const response = await api.getPublicShopProducts(slug, searchOptions)
       
       if (response.data) {
-        const products = response.data as Product[]
-        setAllProducts(products)
-        setTotalProducts(products.length)
+        setAllProducts(response.data)  // ← PLUS DE CAST
+        setTotalProducts(response.data.length)
       }
     } catch (err) {
       console.error('Erreur chargement produits:', err)
@@ -269,7 +269,7 @@ export default function ProductsPage() {
       setIsLoading(false)
     }
   }
-
+ 
   const applyFilters = () => {
     let filtered = [...allProducts]
     
@@ -462,7 +462,7 @@ export default function ProductsPage() {
                   {categories.map(category => (
                     <button
                       key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      onClick={() => category && setSelectedCategory(category)}
                       className={`block w-full text-left px-3 py-2 rounded-md text-sm ${
                         selectedCategory === category
                           ? 'bg-blue-100 text-blue-700'
