@@ -1,13 +1,14 @@
-// apps/web/app/auth/login/page.tsx - AJOUTER CETTE LOGIQUE
+// apps/web/app/auth/login/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'  // ← AJOUTER Suspense
 import { useAuth } from '@/app/contexts/AuthContext'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@/app/lib/api'
 
-export default function LoginPage() {
+// Composant qui utilise useSearchParams
+function LoginContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -16,81 +17,73 @@ export default function LoginPage() {
 
   const { login } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  
+  const searchParams = useSearchParams()  // ← useSearchParams est ici
+
   const redirectTo = searchParams.get('redirect') || '/seller/dashboard'
   const shouldMergeCart = searchParams.get('merge_cart') === 'true'
 
   useEffect(() => {
-    // Vérifier s'il y a un checkout en attente
     const checkoutIntent = localStorage.getItem('checkout_intent')
     if (checkoutIntent) {
       console.log('Checkout en attente détecté')
     }
   }, [])
 
-// Dans apps/web/app/auth/login/page.tsx - MODIFIEZ handleSubmit
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setIsLoading(true)
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setError('')
-  setIsLoading(true)
+    try {
+      await login(email, password)
 
-  try {
-    await login(email, password)
-    
-    // Si login réussi ET qu'on doit fusionner le panier
-    if (shouldMergeCart) {
-      setIsMergingCart(true)
-      const sessionId = localStorage.getItem('guest_cart_session')
-      
-      if (sessionId) {
-        try {
-          console.log(`🔄 Fusion du panier pour session: ${sessionId}`)
-          await api.mergeGuestCart(sessionId)
-          console.log('✅ Panier fusionné avec succès')
-          localStorage.removeItem('guest_cart_session')
-        } catch (mergeError: any) {
-          console.error('❌ Erreur fusion panier:', mergeError)
-          // Ne pas bloquer l'utilisateur si la fusion échoue
-        }
-      }
-      
-      // Vérifier s'il y a un checkout en attente
-      const checkoutIntent = localStorage.getItem('checkout_intent')
-      if (checkoutIntent) {
-        try {
-          const intent = JSON.parse(checkoutIntent)
-          if (Date.now() - intent.timestamp < 3600000) { // 1 heure
-            console.log(`✅ Redirection vers checkout: ${intent.shopSlug}`)
-            router.push(`/checkout?shop=${intent.shopSlug}`)
-            localStorage.removeItem('checkout_intent')
-            return
+      if (shouldMergeCart) {
+        setIsMergingCart(true)
+        const sessionId = localStorage.getItem('guest_cart_session')
+
+        if (sessionId) {
+          try {
+            console.log(`🔄 Fusion du panier pour session: ${sessionId}`)
+            await api.mergeGuestCart(sessionId)
+            console.log('✅ Panier fusionné avec succès')
+            localStorage.removeItem('guest_cart_session')
+          } catch (mergeError: any) {
+            console.error('❌ Erreur fusion panier:', mergeError)
           }
-        } catch (e) {
-          console.error('❌ Erreur parsing checkout intent:', e)
+        }
+
+        const checkoutIntent = localStorage.getItem('checkout_intent')
+        if (checkoutIntent) {
+          try {
+            const intent = JSON.parse(checkoutIntent)
+            if (Date.now() - intent.timestamp < 3600000) {
+              console.log(`✅ Redirection vers checkout: ${intent.shopSlug}`)
+              router.push(`/checkout?shop=${intent.shopSlug}`)
+              localStorage.removeItem('checkout_intent')
+              return
+            }
+          } catch (e) {
+            console.error('❌ Erreur parsing checkout intent:', e)
+          }
         }
       }
-    }
-    
-    // Redirection normale
-    console.log(`✅ Redirection vers: ${redirectTo}`)
-    router.push(redirectTo)
-    
-  } catch (err: any) {
-    setError(err.message || 'Échec de la connexion. Vérifiez vos identifiants.')  
-  } finally {
-    setIsLoading(false)
-    setIsMergingCart(false)
-  }
-}
 
+      console.log(`✅ Redirection vers: ${redirectTo}`)
+      router.push(redirectTo)
+
+    } catch (err: any) {
+      setError(err.message || 'Échec de la connexion. Vérifiez vos identifiants.')
+    } finally {
+      setIsLoading(false)
+      setIsMergingCart(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">   
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Connexion à votre compte
           </h2>
           {shouldMergeCart && (
@@ -109,9 +102,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email
-              </label>
+              <label htmlFor="email" className="sr-only">Email</label>
               <input
                 id="email"
                 name="email"
@@ -125,9 +116,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
-                Mot de passe
-              </label>
+              <label htmlFor="password" className="sr-only">Mot de passe</label>
               <input
                 id="password"
                 name="password"
@@ -174,5 +163,18 @@ const handleSubmit = async (e: React.FormEvent) => {
         </form>
       </div>
     </div>
+  )
+}
+
+// Composant principal avec Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }
