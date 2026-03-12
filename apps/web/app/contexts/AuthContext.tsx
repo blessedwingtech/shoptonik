@@ -6,7 +6,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useRouter } from 'next/navigation'
 import { api } from '../lib/api';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 //const API_BASE_URL = 'http://10.70.51.229:8000/api/v1';
 
 interface User {
