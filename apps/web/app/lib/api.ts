@@ -316,17 +316,7 @@ export interface OrderItem {
   total_price: number
 }
 
-// export interface Order {
-//   id: string
-//   order_number: string
-//   customer_name: string
-//   customer_email: string
-//   total_amount: number
-//   status: string
-//   items: OrderItem[]
-//   created_at: string
-  
-   
+ 
 export interface Order {
   id: string
   order_number: string

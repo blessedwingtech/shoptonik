@@ -1,34 +1,36 @@
 // next.config.ts
 import type { NextConfig } from "next";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Extraire la base URL (supprimer /api/v1 du chemin)
+const API_BASE_URL = API_URL.replace('/api/v1', '');
+
 const nextConfig: NextConfig = {
-  // ✅ AJOUTEZ CETTE CONFIGURATION POUR LE RÉSEAU LOCAL
   allowedDevOrigins: [
-    '172.24.224.1',        // Votre IP réseau actuelle
-    '10.17.7.229',         // IP de votre smartphone (d'après le log)
-    '*.local',             // Pour les domaines .local
-    'localhost',           // Toujours garder localhost
-    '192.168.*.*',         // Plage IP courante
-    '10.*.*.*'             // Plage IP courante
+    '172.24.224.1',
+    '10.17.7.229',
+    '*.local',
+    'localhost',
+    '192.168.*.*',
+    '10.*.*.*'
   ],
 
   async rewrites() {
     return [
-      // Proxy pour l'API backend
+      // Proxy pour l'API backend - utilise la variable d'env
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*',
-        //destination: 'http://172.31.96.1:8000/api/:path*',
+        destination: `${API_BASE_URL}/api/:path*`,
       },
-      // PROXY POUR LES IMAGES (C'EST CE QUI MANQUE !)
+      // Proxy pour les uploads
       {
         source: '/uploads/:path*',
-        destination: 'http://localhost:8000/uploads/:path*',
-        //destination: 'http://172.31.96.1:8000/uploads/:path*',
+        destination: `${API_BASE_URL}/uploads/:path*`,
       },
     ];
   },
-  // Désactiver l'optimisation d'image pour éviter les problèmes
+  
+  // Désactiver l'optimisation d'image
   images: {
     unoptimized: true,
   },
