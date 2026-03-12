@@ -1,0 +1,14 @@
+# Fichiers sensibles et env
+.env
+.env.*
+*_
+
+# Python
+__pycache__/
+*.pyc
+venv/
+backend/venv/
+
+# Node
+node_modules/
+.next/

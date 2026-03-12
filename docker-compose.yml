@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: shoptonik-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: shoptonik
+      POSTGRES_USER: shoptonik
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shoptonik-network
+    ports:
+      - "127.0.0.1:5433:5432"
+
+  backend:
+    build: ./backend
+    container_name: shoptonik-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://shoptonik:${DB_PASSWORD}@postgres:5432/shoptonik
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "false"
+      FRONTEND_URL: https://shop.bittonik.com
+      BACKEND_URL: https://api.bittonik.com
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    networks:
+      - shoptonik-network
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    container_name: shoptonik-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    networks:
+      - shoptonik-network
+    ports:
+      - "127.0.0.1:3000:3000"
+
+networks:
+  shoptonik-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  uploads_data:

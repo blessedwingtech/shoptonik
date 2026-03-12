@@ -35,7 +35,7 @@ pyOpenSSL==25.3.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.1
 python-jose==3.5.0
-python-magic-bin==0.4.14
+python-magic
 python-multipart==0.0.21
 python-slugify==8.0.4
 requests==2.32.5
@@ -50,3 +50,4 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 urllib3==2.6.3
 uvicorn==0.40.0
+psycopg2-binary

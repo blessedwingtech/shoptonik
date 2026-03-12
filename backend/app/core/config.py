@@ -1,17 +1,26 @@
 # app/core/config.py
 import os
-
+from pydantic import Field
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 
 class Settings(BaseSettings):
     # Application
     app_name: str = "ShopTonik"
-    debug: bool = True
-    
+    debug: bool = False
+   
     # Database
-      
-    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./shoptonik.db")
+    database_url: str = Field(
+        default="postgresql://shoptonik:Bentz789LORD&@postgres:5432/shoptonik",
+        env="DATABASE_URL"
+    ) 
+    #database_url: str = os.getenv("DATABASE_URL", "sqlite:///./shoptonik.db")
+    db_password: str = os.getenv("DB_PASSWORD", "")    
+    # Cloudflare R2 Configuration
+    r2_access_key_id: str = os.getenv("R2_ACCESS_KEY_ID", "")
+    r2_secret_access_key: str = os.getenv("R2_SECRET_ACCESS_KEY", "")
+    r2_bucket_name: str = os.getenv("R2_BUCKET_NAME", "")
+    r2_endpoint: str = os.getenv("R2_ENDPOINT", "")
     
     # Security 
     secret_key: str = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
@@ -47,5 +56,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"
 
 settings = Settings()

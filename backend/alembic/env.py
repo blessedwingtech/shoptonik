@@ -16,6 +16,16 @@ from app.models import user, shop, product, order, audit
 config = context.config
 target_metadata = Base.metadata
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Charge le fichier .env
+
+# Remplacer la configuration de l'URL par la variable d'env
+db_password = os.getenv('DB_PASSWORD')
+db_url = f"postgresql://shoptonik:{db_password}@postgres:5432/shoptonik"
+config.set_main_option('sqlalchemy.url', db_url)
+
 def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -28,16 +38,23 @@ def run_migrations_offline():
         context.run_migrations()
 
 def run_migrations_online():
+    # Utiliser la configuration de la base de données depuis les variables d'env
+    from app.core.config import settings
+    
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        {
+            "sqlalchemy.url": settings.database_url,
+        },
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
+
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=target_metadata
         )
+
         with context.begin_transaction():
             context.run_migrations()
 
